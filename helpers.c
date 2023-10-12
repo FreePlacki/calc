@@ -16,18 +16,18 @@ void reverse(char *str) {
     }
 }
 
-void parse_int(char *output, char *line) {
+unsigned int parse_int(char *output, char *line, unsigned int idx) {
     int i = 0;
-    while (line[i] != ' ' && line[i] != '\n') {
+    while (line[i+idx] != ' ' && line[i+idx] != '\n') {
         i++;
     }
-    strncpy(output, line, i);
+    strncpy(output, line + idx, i);
     output[i] = '\0';
 
-    line += i;
+    return i;
 }
 
 void read_arg(char *output, char *line) {
-    parse_int(output, line);
+    parse_int(output, line, 0);
     line++; // TODO: expect '\n'
 }

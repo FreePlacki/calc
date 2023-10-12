@@ -7,7 +7,7 @@
 #define dbg(x, y) fprintf(stderr, "%d:" #y " = " x "\n", __LINE__, y);
 
 void reverse(char *str);
-void parse_int(char *output, char *line);
+unsigned int parse_int(char *output, char *line, unsigned int idx);
 bool is_digit(char c);
 void read_arg(char *output, char *line);
 

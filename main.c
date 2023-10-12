@@ -1,4 +1,5 @@
 #include "helpers.h"
+#include "error.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,19 +19,24 @@ typedef struct {
     unsigned short base;
 } oper;
 
-oper read_instruction(char *line) {
+oper read_instruction(char *line, unsigned int line_idx) {
     oper op;
 
+    unsigned int idx = 0;
     while (*line != '\n') {
-        char c = *line++;
+        char c = line[idx];
+        idx++;
         switch (c) {
         case '+':
             op.op_type = Add;
-            line++; // TODO: expect ' '
+            consume(' ', line, line_idx, &idx);
+
             char base[2];
-            parse_int(base, line);
+            parse_int(base, line, idx);
             op.base = atoi(base);
-            line++; // TODO: expect '\n'
+
+            // dbg("%d", idx);
+            // consume('\n', line, line_idx, &idx);
             return op;
         case '*':
             op.op_type = Mul;
@@ -135,7 +141,9 @@ int main(int argc, char **argv) {
     // Liczby mają długość 40 więc powinniśmy zmieścić się w 100 znakach na
     // linię
     char buffer[100];
+    unsigned int line_idx = 0;
     while (fgets(buffer, sizeof(buffer), in_file) != NULL) {
+        line_idx++;
         if (buffer[0] == '\n') {
             continue;
         }
@@ -143,7 +151,7 @@ int main(int argc, char **argv) {
         fprintf(out_file, "%s", buffer);
 
         if (ctr == 0) {
-            op = read_instruction(buffer);
+            op = read_instruction(buffer, line_idx);
         } else if (ctr == 1) {
             read_arg(arg1, buffer);
         } else if (ctr == 2) {
