@@ -2,18 +2,9 @@
 #include <assert.h>
 #include <string.h>
 
-
 bool is_digit(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
            (c >= 'A' && c <= 'F');
-}
-
-void append_chr(char *str, char c) {
-    unsigned int len = strlen(str);
-    assert(sizeof(str) > len + 1);
-
-    str[len] = c;
-    str[len + 1] = '\0';
 }
 
 void reverse(char *str) {

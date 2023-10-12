@@ -59,16 +59,11 @@ oper read_instruction(char *line) {
 }
 
 void exec_add(char *output, short base, char *arg1, char *arg2) {
-    int sum = atoi(arg1) + atoi(arg2);
-    snprintf(output, 100, "%d", sum);
-
     if (strlen(arg1) > strlen(arg2)) {
         char *t = arg1;
         arg1 = arg2;
         arg2 = t;
     }
-
-    char res[100];
 
     int n1 = strlen(arg1), n2 = strlen(arg2);
 
@@ -78,27 +73,28 @@ void exec_add(char *output, short base, char *arg1, char *arg2) {
     int carry = 0;
     for (int i = 0; i < n1; i++) {
         int sum = ((arg1[i] - '0') + (arg2[i] - '0') + carry);
-        append_chr(res, sum % 10 + '0');
+        char c = sum % 10 + '0';
+        strncat(output, &c, 1);
 
         carry = sum / 10;
     }
 
     for (int i = n1; i < n2; i++) {
         int sum = ((arg2[i] - '0') + carry);
-        append_chr(res, sum % 10 + '0');
+        char c = sum % 10 + '0';
+        strncat(output, &c, 1);
         carry = sum / 10;
     }
 
-    if (carry)
-        append_chr(res, carry + '0');
+    if (carry) {
+        char c = carry + '0';
+        strncat(output, &c, 1);
+    }
 
-    reverse(res);
-
-    strcpy(output, res);
+    reverse(output);
 }
 
-void execute(oper op, char *arg1, char *arg2) {
-    char output[100];
+void execute(char *output, oper op, char *arg1, char *arg2) {
     switch (op.op_type) {
     case Add:
         exec_add(output, op.base, arg1, arg2);
@@ -140,23 +136,27 @@ int main(int argc, char **argv) {
     // linię
     char buffer[100];
     while (fgets(buffer, sizeof(buffer), in_file) != NULL) {
-        fprintf(out_file, "LINE: %s", buffer);
-        if (buffer[0] == '\n')
-            printf("NEWLINE\n");
+        if (buffer[0] == '\n') {
+            continue;
+        }
+
+        fprintf(out_file, "%s", buffer);
+
         if (ctr == 0) {
             op = read_instruction(buffer);
         } else if (ctr == 1) {
             read_arg(arg1, buffer);
         } else if (ctr == 2) {
             read_arg(arg2, buffer);
-            execute(op, arg1, arg2);
+            char *output = (char *)malloc(sizeof(char[100]));
+            output[0] = '\0';
+            execute(output, op, arg1, arg2);
+            fprintf(out_file, "%s\n", output);
+            free(output);
             ctr = -1;
         }
         ctr++;
     }
-    // printf("OP: %d, %d\n", op.op_type, op.base);
-    // printf("A1 `%s`\n", arg1);
-    // printf("A2 `%s`\n", arg2);
 
     fclose(in_file);
     fclose(out_file);

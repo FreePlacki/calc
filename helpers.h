@@ -9,7 +9,6 @@
 void reverse(char *str);
 void parse_int(char *output, char *line);
 bool is_digit(char c);
-void append_chr(char *str, char c);
 void read_arg(char *output, char *line);
 
 #endif
