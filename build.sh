@@ -2,4 +2,4 @@
 
 set -xe
 
-gcc -Wall -Wextra -o main main.c
+gcc -pedantic -Wall -Wextra -o main helpers.c main.c
