@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
 #define LINE_SIZE 255
 
@@ -65,6 +66,8 @@ void print_help(char *name) {
 }
 
 int main(int argc, char **argv) {
+    SetConsoleOutputCP(65001); // poprawne kodowanie na windowsie
+
     if (argc == 1 || argc > 3) {
         print_help(argv[0]);
         exit(1);

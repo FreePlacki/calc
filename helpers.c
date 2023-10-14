@@ -78,7 +78,11 @@ char int_to_char(int v) {
 const char *extract_name(const char *path) {
     const char *filename;
 
-    const char *last_slash = strrchr(path, '/');
+    char slash = '/';
+    #ifdef _WIN32
+        slash = '\\';
+    #endif
+    const char *last_slash = strrchr(path, slash);
 
     if (last_slash != NULL) {
         filename = last_slash + 1;
@@ -90,7 +94,10 @@ const char *extract_name(const char *path) {
 
     if (last_dot != NULL) {
         size_t len = last_dot - filename;
-        return strndup(filename, len);
+        char *new_str = (char *)malloc(sizeof(char) * (len+1));
+        strncpy(new_str, filename, len);
+        new_str[len] = '\0';
+        return strdup(new_str);
     } else {
         return strdup(filename);
     }
