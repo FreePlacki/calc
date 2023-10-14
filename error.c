@@ -4,14 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum {
-    error,
-    warning,
-    info,
-} er_type;
-
-void report(unsigned int line_idx, unsigned int char_idx, er_type t, char *msg,
-            ...) {
+void report(scanner *scanner, er_type t, char *msg, ...) {
     // https://stackoverflow.com/questions/68154231/how-do-i-define-a-function-that-accepts-a-formatted-input-string-in-c
 
     va_list args;
@@ -27,15 +20,15 @@ void report(unsigned int line_idx, unsigned int char_idx, er_type t, char *msg,
         fprintf(stderr, "\x1b[34mINFO\x1b[0m");
         break;
     }
-    fprintf(stderr, " [%d:%d]: ", line_idx, char_idx);
-    vfprintf(stderr, msg, args);
-}
 
-void consume(char c, char *line, unsigned int line_idx,
-             unsigned int *char_idx) {
-    if (line[*char_idx] != c) {
-        report(line_idx, *char_idx, error, "Expected `%c`\n", c);
-        exit(1);
+    if (scanner == NULL) {
+        fprintf(stderr, ": ");
+        vfprintf(stderr, msg, args);
+        return;
     }
-    (*char_idx)++;
+
+    fprintf(stderr, " [%d:%d]: ", scanner->line_idx, scanner->idx);
+    vfprintf(stderr, msg, args);
+    fprintf(stderr, "\t%s", scanner->line);
+    fprintf(stderr, "\t%*s^\n", scanner->idx-1, "");
 }

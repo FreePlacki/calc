@@ -1,6 +1,35 @@
 #include "helpers.h"
+#include "error.h"
+#include "scanner.h"
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+void init_dynStr(dynStr *str) {
+    str->size = 0;
+    str->capacity = 8;
+    str->data = (char *)malloc(sizeof(char) * str->capacity);
+    str->data[0] = '\0';
+}
+
+void append_char(dynStr *str, char c) {
+    if (str->size + 1 >= str->capacity) {
+        str->capacity *= 2;
+        str->data = (char *)realloc(str->data, str->capacity);
+    }
+
+    str->data[str->size] = c;
+    str->size++;
+    str->data[str->size] = '\0';
+}
+
+void free_dynStr(dynStr *str) {
+    free(str->data);
+    str->data = NULL;
+    str->size = 0;
+    str->capacity = 0;
+}
 
 bool is_digit(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
@@ -16,18 +45,53 @@ void reverse(char *str) {
     }
 }
 
-unsigned int parse_int(char *output, char *line, unsigned int idx) {
-    int i = 0;
-    while (line[i+idx] != ' ' && line[i+idx] != '\n') {
-        i++;
+int char_to_dec(scanner *scanner, char c, unsigned int base) {
+    int res;
+    if (c >= '0' && c <= '9') {
+        res = c - '0';
+    } else if (c >= 'A' && c <= 'F') {
+        res = 10 + c - 'A';
+    } else if (c >= 'a' && c <= 'f') {
+        res = 10 + c - 'a';
+    } else {
+        res = -1;
     }
-    strncpy(output, line + idx, i);
-    output[i] = '\0';
 
-    return i;
+    if (res == -1 || res > base - 1) {
+        report(scanner, error, "Nie można użyć `%c` w liczbie o bazie %d\n", c,
+               base);
+        exit(1);
+    }
+
+    return res;
 }
 
-void read_arg(char *output, char *line) {
-    parse_int(output, line, 0);
-    line++; // TODO: expect '\n'
+char int_to_char(int v) {
+    assert(v >= 0 && v <= 15);
+
+    if (v >= 0 && v <= 9) {
+        return '0' + v;
+    }
+    return 'A' + v - 10;
+}
+
+const char *extract_name(const char *path) {
+    const char *filename;
+
+    const char *last_slash = strrchr(path, '/');
+
+    if (last_slash != NULL) {
+        filename = last_slash + 1;
+    } else {
+        filename = path;
+    }
+
+    const char *last_dot = strrchr(filename, '.');
+
+    if (last_dot != NULL) {
+        size_t len = last_dot - filename;
+        return strndup(filename, len);
+    } else {
+        return strdup(filename);
+    }
 }

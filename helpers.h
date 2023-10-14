@@ -1,14 +1,26 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#include "scanner.h"
 #include <stdbool.h>
 #include <stdio.h>
 
 #define dbg(x, y) fprintf(stderr, "%d:" #y " = " x "\n", __LINE__, y);
 
+typedef struct {
+    char *data;
+    unsigned int size;
+    unsigned int capacity;
+} dynStr;
+
+void init_dynStr(dynStr *str);
+void append_char(dynStr *str, char c);
+void free_dynStr(dynStr *str);
+
 void reverse(char *str);
-unsigned int parse_int(char *output, char *line, unsigned int idx);
 bool is_digit(char c);
-void read_arg(char *output, char *line);
+int char_to_dec(scanner *scanner, char c, unsigned int base);
+char int_to_char(int v);
+const char *extract_name(const char *path);
 
 #endif

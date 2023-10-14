@@ -1,70 +1,15 @@
-#include "helpers.h"
 #include "error.h"
+#include "helpers.h"
+#include "operation.h"
+#include "scanner.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-enum op_type {
-    Add,
-    Mul,
-    Div,
-    Mod,
-    Pow,
-    Convert,
-};
+#define LINE_SIZE 255
 
-typedef struct {
-    enum op_type op_type;
-    unsigned short base;
-} oper;
-
-oper read_instruction(char *line, unsigned int line_idx) {
-    oper op;
-
-    unsigned int idx = 0;
-    while (*line != '\n') {
-        char c = line[idx];
-        idx++;
-        switch (c) {
-        case '+':
-            op.op_type = Add;
-            consume(' ', line, line_idx, &idx);
-
-            char base[2];
-            parse_int(base, line, idx);
-            op.base = atoi(base);
-
-            // dbg("%d", idx);
-            // consume('\n', line, line_idx, &idx);
-            return op;
-        case '*':
-            op.op_type = Mul;
-            break;
-        case '/':
-            op.op_type = Div;
-            break;
-        case '%':
-            op.op_type = Mod;
-            break;
-        case '^':
-            op.op_type = Pow;
-            break;
-        default:
-            // kompilując w GCC można było użyć '0' ... '9'
-            // ale nie chciałem wprowadzać rzeczy z poza standardu
-            if (is_digit(c)) {
-                op.op_type = Convert;
-                break;
-            }
-            fprintf(stderr, "Nieoczekiwany znak `%c`\n", c);
-        }
-    }
-
-    return op;
-}
-
-void exec_add(char *output, short base, char *arg1, char *arg2) {
+dynStr exec_add(scanner *scanner, short base, char *arg1, char *arg2) {
     if (strlen(arg1) > strlen(arg2)) {
         char *t = arg1;
         arg1 = arg2;
@@ -76,41 +21,40 @@ void exec_add(char *output, short base, char *arg1, char *arg2) {
     reverse(arg1);
     reverse(arg2);
 
+    dynStr output;
+    init_dynStr(&output);
+
     int carry = 0;
-    for (int i = 0; i < n1; i++) {
-        int sum = ((arg1[i] - '0') + (arg2[i] - '0') + carry);
-        char c = sum % 10 + '0';
-        strncat(output, &c, 1);
+    for (int i = 0; i < n2; i++) {
+        int digit1 = i < n1 ? char_to_dec(scanner, arg1[i], base) : 0;
+        int digit2 = char_to_dec(scanner, arg2[i], base);
+        int sum = digit1 + digit2 + carry;
 
-        carry = sum / 10;
-    }
+        char c = int_to_char(sum % base);
+        append_char(&output, c);
 
-    for (int i = n1; i < n2; i++) {
-        int sum = ((arg2[i] - '0') + carry);
-        char c = sum % 10 + '0';
-        strncat(output, &c, 1);
-        carry = sum / 10;
+        carry = sum / base;
     }
 
     if (carry) {
-        char c = carry + '0';
-        strncat(output, &c, 1);
+        char c = int_to_char(carry);
+        append_char(&output, c);
     }
 
-    reverse(output);
+    reverse(output.data);
+    return output;
 }
 
-void execute(char *output, oper op, char *arg1, char *arg2) {
+dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2) {
     switch (op.op_type) {
     case Add:
-        exec_add(output, op.base, arg1, arg2);
+        return exec_add(scanner, op.base, arg1, arg2);
         break;
     }
-    printf("OUTPUT: %s\n", output);
 }
 
 void print_help(char *name) {
-    fprintf(stderr, "Uruchamianie:\n\t%s ", name);
+    fprintf(stderr, "Użycie:\n\t%s ", name);
     fprintf(
         stderr,
         "<ścieżka do pliku wejściowego> [ścieżka do pliku wyjściowego]\n\n");
@@ -131,36 +75,48 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Nie można otworzyć pliku `%s`\n", argv[1]);
         exit(1);
     }
-    // TODO
-    FILE *out_file = fopen(argc == 3 ? argv[2] : "out_.txt", "w");
+
+    char *out_name;
+    if (argc == 3) {
+        out_name = argv[2];
+    } else {
+        char o_name[100] = "out_";
+        out_name = strcat(o_name, extract_name(argv[1]));
+        out_name = strcat(out_name, ".txt");
+        report(NULL, info, "Nie podano pliku wyjściowego, stworzono `%s`\n", out_name);
+    }
+    FILE *out_file = fopen(out_name, "w");
 
     oper op;
     char arg1[40];
     char arg2[40];
-    int ctr = 0;
-    // Liczby mają długość 40 więc powinniśmy zmieścić się w 100 znakach na
-    // linię
-    char buffer[100];
+    short ctr = 0;
+    char buffer[LINE_SIZE];
     unsigned int line_idx = 0;
     while (fgets(buffer, sizeof(buffer), in_file) != NULL) {
         line_idx++;
+
         if (buffer[0] == '\n') {
             continue;
         }
 
         fprintf(out_file, "%s", buffer);
 
+        scanner scanner;
+        scanner.idx = 0;
+        scanner.line_idx = line_idx;
+        scanner.line = buffer;
+
         if (ctr == 0) {
-            op = read_instruction(buffer, line_idx);
+            op = read_instruction(&scanner);
         } else if (ctr == 1) {
-            read_arg(arg1, buffer);
+            read_arg(&scanner, arg1);
         } else if (ctr == 2) {
-            read_arg(arg2, buffer);
-            char *output = (char *)malloc(sizeof(char[100]));
-            output[0] = '\0';
-            execute(output, op, arg1, arg2);
-            fprintf(out_file, "%s\n", output);
-            free(output);
+            read_arg(&scanner, arg2);
+            dynStr output = execute(&scanner, op, arg1, arg2);
+            fprintf(out_file, "%s\n", output.data);
+
+            free_dynStr(&output);
             ctr = -1;
         }
         ctr++;
