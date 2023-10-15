@@ -9,9 +9,11 @@ typedef struct {
     unsigned int idx;
 } scanner;
 
+void parse_int(scanner *scanner, char *output, unsigned int len);
 oper read_instruction(scanner *scanner);
 void read_arg(scanner *scanner, char *output);
+
+char advance(scanner *scanner);
 void consume(scanner *scanner, char c);
-void parse_int(scanner *scanner, char *output, unsigned int len);
 
 #endif

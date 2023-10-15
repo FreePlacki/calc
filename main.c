@@ -65,9 +65,13 @@ int main(int argc, char **argv) {
             op = read_instruction(&scanner);
         } else if (ctr == 1) {
             read_arg(&scanner, arg1);
+            consume(&scanner, '\n');
         } else if (ctr == 2) {
             read_arg(&scanner, arg2);
             dynStr output = execute(&scanner, op, arg1, arg2);
+            if (scanner.line[strlen(scanner.line) - 1] != '\n') {
+                fprintf(out_file, "\n");
+            }
             fprintf(out_file, "%s\n", output.data);
 
             free_dynStr(&output);

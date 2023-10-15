@@ -12,7 +12,7 @@ void parse_int(scanner *scanner, char *output, unsigned int len) {
     char *start = scanner->line + scanner->idx;
     // pewnie dało by się bez wprowadzania 'i' ale czytelność by się pogorszyła
     unsigned int i = 0;
-    while (start[i] != ' ' && start[i] != '\n') {
+    while (is_digit(start[i])) {
         i++;
         scanner->idx++;
         if (i > len) {
@@ -25,26 +25,25 @@ void parse_int(scanner *scanner, char *output, unsigned int len) {
     output[i] = '\0';
 }
 
-void read_arg(scanner *scanner, char *output) {
-    parse_int(scanner, output, ARG_SIZE);
-    consume(scanner, '\n');
+char advance(scanner *scanner) {
+    return scanner->line[scanner->idx++];
 }
 
 void consume(scanner *scanner, char c) {
-    if (scanner->line[scanner->idx] != c) {
+    if (advance(scanner) != c) {
         report(scanner, error,
                c == '\n' ? "Oczekiwano `\\n`\n" : "Oczekiwano `%c`\n", c);
         exit(1);
     }
-    scanner->idx++;
+}
+
+void read_arg(scanner *scanner, char *output) {
+    parse_int(scanner, output, ARG_SIZE);
 }
 
 oper read_instruction(scanner *scanner) {
     oper op;
-
-    // TODO: add scanned advance which returns line[idx]
-    char c = scanner->line[scanner->idx];
-    scanner->idx++;
+    char c = advance(scanner);
 
     if (is_digit(c)) {
         op.op_type = Convert;
