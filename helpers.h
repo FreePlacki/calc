@@ -17,6 +17,7 @@ void init_dynStr(dynStr *str);
 void append_char(dynStr *str, char c);
 void free_dynStr(dynStr *str);
 
+void print_help(char *name);
 void reverse(char *str);
 bool is_digit(char c);
 int char_to_dec(scanner *scanner, char c, unsigned int base);

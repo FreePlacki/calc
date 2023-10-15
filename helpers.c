@@ -6,6 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+void print_help(char *name) {
+    fprintf(stderr, "Użycie:\n\t%s ", name);
+    fprintf(
+        stderr,
+        "<ścieżka do pliku wejściowego> [ścieżka do pliku wyjściowego]\n\n");
+    fprintf(stderr, "Plik wejściowy musi być w formacie `*.txt`\n");
+    fprintf(stderr, "Plik wyjściowy jest opcjonalny ");
+    fprintf(stderr, "(zostanie stworzony na podstawie nazwy pliku wejściowego "
+                    "`out_*.txt`)\n");
+}
+
 void init_dynStr(dynStr *str) {
     str->size = 0;
     str->capacity = 8;
