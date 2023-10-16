@@ -19,8 +19,9 @@ dynStr exec_add(scanner *scanner, short base, char *arg1, char *arg2) {
 
     int carry = 0;
     for (int i = 0; i < n2; i++) {
-        int digit1 = i < n1 ? char_to_dec(scanner, arg1[i], base) : 0;
-        int digit2 = char_to_dec(scanner, arg2[i], base);
+        // Możemy (chyba) dać NULL za ok, bo już sprawdziliśmy błędny input
+        int digit1 = i < n1 ? char_to_dec(scanner, arg1[i], base, NULL) : 0;
+        int digit2 = char_to_dec(scanner, arg2[i], base, NULL);
         int sum = digit1 + digit2 + carry;
 
         char c = int_to_char(sum % base);
@@ -53,12 +54,12 @@ dynStr exec_mul(scanner *scanner, short base, char *arg1, char *arg2) {
 
     for (int i = 0; i < n1; i++) {
         int carry = 0;
-        int digit1 = char_to_dec(scanner, arg1[i], base);
+        int digit1 = char_to_dec(scanner, arg1[i], base, NULL);
 
         for (int j = 0; j < n2; j++) {
-            int digit2 = char_to_dec(scanner, arg2[j], base);
+            int digit2 = char_to_dec(scanner, arg2[j], base, NULL);
             int product = digit1 * digit2 + carry +
-                          char_to_dec(scanner, result.data[i + j], base);
+                          char_to_dec(scanner, result.data[i + j], base, NULL);
 
             carry = product / base;
             result.data[i + j] = int_to_char(product % base);
@@ -66,7 +67,7 @@ dynStr exec_mul(scanner *scanner, short base, char *arg1, char *arg2) {
 
         if (carry > 0) {
             result.data[i + n2] = int_to_char(
-                char_to_dec(scanner, result.data[i + n2], base) + carry);
+                char_to_dec(scanner, result.data[i + n2], base, NULL) + carry);
         }
     }
 
@@ -124,7 +125,7 @@ dynStr exec_pow(scanner *scanner, short base, char *arg1, char *arg2) {
 //     return result;
 // }
 
-dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2) {
+dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2, bool *ok) {
     switch (op.op_type) {
     case Add:
         return exec_add(scanner, op.base, arg1, arg2);

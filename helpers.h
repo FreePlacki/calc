@@ -19,8 +19,8 @@ void free_dynStr(dynStr *str);
 
 void print_help(char *name);
 void reverse(char *str);
-bool is_digit(char c);
-int char_to_dec(scanner *scanner, char c, unsigned int base);
+bool is_digit(char c, unsigned int base);
+int char_to_dec(scanner *scanner, char c, unsigned int base, bool *ok);
 char int_to_char(int v);
 const char *extract_name(const char *path);
 

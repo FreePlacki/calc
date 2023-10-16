@@ -2,6 +2,7 @@
 #define SCANNER_H
 
 #include "operation.h"
+#include <stdbool.h>
 
 typedef struct {
     char *line;
@@ -9,11 +10,13 @@ typedef struct {
     unsigned int idx;
 } scanner;
 
-void parse_int(scanner *scanner, char *output, unsigned int len);
-oper read_instruction(scanner *scanner);
-void read_arg(scanner *scanner, char *output);
+void parse_int(scanner *scanner, char *output, unsigned int len,
+               unsigned int base, bool *ok);
+oper read_instruction(scanner *scanner, bool *ok);
+void read_arg(scanner *scanner, char *output, unsigned int base, bool *ok);
 
 char advance(scanner *scanner);
 void consume(scanner *scanner, char c);
+void consume_spaces(scanner *scanner);
 
 #endif

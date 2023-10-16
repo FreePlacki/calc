@@ -42,9 +42,10 @@ void free_dynStr(dynStr *str) {
     str->capacity = 0;
 }
 
-bool is_digit(char c) {
-    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
-           (c >= 'A' && c <= 'F');
+bool is_digit(char c, unsigned int base) {
+    bool ok = true;
+    char_to_dec(NULL, c, base, &ok);
+    return ok;
 }
 
 void reverse(char *str) {
@@ -56,7 +57,7 @@ void reverse(char *str) {
     }
 }
 
-int char_to_dec(scanner *scanner, char c, unsigned int base) {
+int char_to_dec(scanner *scanner, char c, unsigned int base, bool *ok) {
     int res;
     if (c >= '0' && c <= '9') {
         res = c - '0';
@@ -69,9 +70,8 @@ int char_to_dec(scanner *scanner, char c, unsigned int base) {
     }
 
     if (res == -1 || res > base - 1) {
-        report(scanner, error, "Nie można użyć `%c` w liczbie o bazie %d\n", c,
-               base);
-        exit(1);
+        if (ok)
+            *ok = false;
     }
 
     return res;
@@ -90,9 +90,9 @@ const char *extract_name(const char *path) {
     const char *filename;
 
     char slash = '/';
-    #ifdef _WIN32
-        slash = '\\';
-    #endif
+#ifdef _WIN32
+    slash = '\\';
+#endif
     const char *last_slash = strrchr(path, slash);
 
     if (last_slash != NULL) {
@@ -105,7 +105,7 @@ const char *extract_name(const char *path) {
 
     if (last_dot != NULL) {
         size_t len = last_dot - filename;
-        char *new_str = (char *)malloc(sizeof(char) * (len+1));
+        char *new_str = (char *)malloc(sizeof(char) * (len + 1));
         strncpy(new_str, filename, len);
         new_str[len] = '\0';
         return strdup(new_str);

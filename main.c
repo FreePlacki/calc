@@ -42,11 +42,12 @@ int main(int argc, char **argv) {
     FILE *out_file = fopen(out_name, "w");
 
     oper op;
-    char arg1[40];
-    char arg2[40];
+    char arg1[41];
+    char arg2[41];
     short ctr = 0;
-    char buffer[LINE_SIZE];
+    bool ok = true;
     unsigned int line_idx = 0;
+    char buffer[LINE_SIZE];
     while (fgets(buffer, sizeof(buffer), in_file) != NULL) {
         line_idx++;
 
@@ -56,28 +57,48 @@ int main(int argc, char **argv) {
 
         fprintf(out_file, "%s", buffer);
 
+        if (!ok) {
+            if (ctr != 0) {
+                ctr = (ctr + 1) % 3;
+                continue;
+            }
+            ok = true;
+        }
+
         scanner scanner;
         scanner.idx = 0;
         scanner.line_idx = line_idx;
         scanner.line = buffer;
 
         if (ctr == 0) {
-            op = read_instruction(&scanner);
+            op = read_instruction(&scanner, &ok);
+            if (op.op_type == Convert) {
+                // arg1 = op.base >> 4;
+                // arg2 = op.base & 0xF;
+                // TODO
+                ok = false;
+            }
         } else if (ctr == 1) {
-            read_arg(&scanner, arg1);
-            consume(&scanner, '\n');
+            read_arg(&scanner, arg1, op.base, &ok);
+            if (ok)
+                consume(&scanner, '\n');
         } else if (ctr == 2) {
-            read_arg(&scanner, arg2);
-            dynStr output = execute(&scanner, op, arg1, arg2);
+            read_arg(&scanner, arg2, op.base, &ok);
+            if (!ok) {
+                ctr = 0;
+                continue;
+            }
+            dynStr output = execute(&scanner, op, arg1, arg2, &ok);
             if (scanner.line[strlen(scanner.line) - 1] != '\n') {
                 fprintf(out_file, "\n");
             }
-            fprintf(out_file, "%s\n", output.data);
+            if (ok)
+                fprintf(out_file, "%s\n", output.data);
 
             free_dynStr(&output);
-            ctr = -1;
         }
-        ctr++;
+
+        ctr = (ctr + 1) % 3;
     }
 
     fclose(in_file);
