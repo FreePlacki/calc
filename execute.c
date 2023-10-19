@@ -201,18 +201,6 @@ dynStr exec_mod(scanner *scanner, short base, char *arg1, char *arg2,
     return result;
 }
 
-dynStr exec_pow(scanner *scanner, short base, char *arg1, char *arg2) {
-    dynStr result;
-    init_dynStr(&result);
-
-    if (arg2[0] == '0') {
-        append_char(&result, '1');
-        return result;
-    }
-    // TODO: implement change base first
-    // unsigned long long int can store 2^63-1 and we need (16^10=2^40)
-}
-
 dynStr to_dec(short from, char *arg) {
     dynStr result;
     init_dynStr(&result);
@@ -243,8 +231,6 @@ dynStr exec_convert(scanner *scanner, short fromBase, short toBase, char *arg) {
         char mod[2];
         char to[2];
         sprintf(to, "%d", toBase);
-        dbg("%s", div.data);
-        dbg("%s", to);
         div = exec_div(scanner, 10, div.data, to, mod, NULL);
         mod[1] = '\0';
         append_char(&result, mod[0]);
@@ -254,6 +240,31 @@ dynStr exec_convert(scanner *scanner, short fromBase, short toBase, char *arg) {
     free_dynStr(&div);
 
     reverse(result.data);
+
+    return result;
+}
+
+dynStr exec_pow(scanner *scanner, short base, char *arg1, char *arg2) {
+    dynStr result;
+    init_dynStr(&result);
+    append_char(&result, '1');
+
+
+    unsigned long long exp = atol(to_dec(base, arg2).data);
+    if (atoi(to_dec(base, arg1).data) == 1 || exp == 0) {
+        return result;
+    }
+
+    // https://stackoverflow.com/questions/101439/the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
+    // 2 ^ FFFFF zajmuje ~2min
+    while (true) {
+        if (exp & 1)
+            result = exec_mul(scanner, 10, result.data, arg1);
+        exp >>= 1;
+        if (!exp)
+            break;
+        arg1 = exec_mul(scanner, base, arg1, arg1).data;
+    }
 
     return result;
 }
