@@ -1,5 +1,7 @@
 #include "execute.h"
 #include "helpers.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 dynStr exec_add(scanner *scanner, short base, char *arg1, char *arg2) {
@@ -95,35 +97,34 @@ dynStr exec_pow(scanner *scanner, short base, char *arg1, char *arg2) {
     // unsigned long long int can store 2^63-1 and we need (16^10=2^40)
 }
 
-// dynStr exec_convert(scanner *scanner, short fromBase, short toBase,
-//                     char *arg) {
-//     dynStr result;
-//     init_dynStr(&result);
-//     append_char(&result, '0');
-//
-//     int len = strlen(arg);
-//
-//     for (int i = 0; i < len; i++) {
-//         char digit = arg[i];
-//         int digitValue = char_to_dec(scanner, digit, fromBase);
-//
-//         // Multiply the current result by the target base and add the digit
-//
-//         dynStr tempResult =
-//             exec_mul(scanner, toBase, result.data, fromBase);
-//         dynStr tempSum =
-//             exec_add(scanner, toBase, tempResult.data, char_to_str(digitValue));
-//
-//         free_dynStr(&result);
-//         free_dynStr(&tempResult);
-//
-//         result = tempSum;
-//
-//         free_dynStr(&tempSum);
-//     }
-//
-//     return result;
-// }
+dynStr exec_convert(scanner *scanner, short fromBase, short toBase,
+                    char *arg) {
+    dynStr result;
+    init_dynStr(&result);
+    append_char(&result, '0');
+
+    int len = strlen(arg);
+    char fromBase_str[2];
+    sprintf(fromBase_str, "%d", fromBase);
+
+    for (int i = 0; i < len; i++) {
+        char digit = arg[i];
+        int digitValue = char_to_dec(scanner, digit, fromBase, NULL);
+        char value_str[2];
+        sprintf(value_str, "%d", digitValue);
+
+        dynStr tempResult =
+            exec_mul(scanner, toBase, result.data, fromBase_str);
+        dynStr tempSum =
+            exec_add(scanner, toBase, tempResult.data, value_str);
+
+        free_dynStr(&result);
+        result = tempSum;
+        free_dynStr(&tempResult);
+    }
+
+    return result;
+}
 
 dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2, bool *ok) {
     switch (op.op_type) {
@@ -133,5 +134,7 @@ dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2, bool *ok) {
         return exec_mul(scanner, op.base, arg1, arg2);
     case Pow:
         return exec_pow(scanner, op.base, arg1, arg2);
+    case Convert:
+        return exec_convert(scanner, op.base, atoi(arg1), arg2);
     }
 }

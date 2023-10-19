@@ -73,10 +73,10 @@ int main(int argc, char **argv) {
         if (ctr == 0) {
             op = read_instruction(&scanner, &ok);
             if (op.op_type == Convert) {
-                // arg1 = op.base >> 4;
-                // arg2 = op.base & 0xF;
-                // TODO
-                ok = false;
+                sprintf(arg1, "%d", op.base & 0xF);
+                op.base = op.base >> 4;
+                ctr = 2;
+                continue;
             }
         } else if (ctr == 1) {
             read_arg(&scanner, arg1, op.base, &ok);
