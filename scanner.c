@@ -94,7 +94,7 @@ oper read_instruction(scanner *scanner, bool *ok) {
         if (!(*ok))
             return op;
 
-        op.base = (base1 << 4) | base2;
+        op.base = ((base1-2) << 4) | (base2-2);
         op.op_type = Convert;
         return op;
     }
