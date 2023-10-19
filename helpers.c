@@ -30,8 +30,7 @@ void append_char(dynStr *str, char c) {
         str->data = (char *)realloc(str->data, str->capacity);
     }
 
-    str->data[str->size] = c;
-    str->size++;
+    str->data[str->size++] = c;
     str->data[str->size] = '\0';
 }
 
@@ -63,8 +62,6 @@ int char_to_dec(scanner *scanner, char c, unsigned int base, bool *ok) {
         res = c - '0';
     } else if (c >= 'A' && c <= 'F') {
         res = 10 + c - 'A';
-    } else if (c >= 'a' && c <= 'f') {
-        res = 10 + c - 'a';
     } else {
         res = -1;
     }

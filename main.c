@@ -88,7 +88,8 @@ int main(int argc, char **argv) {
                 ctr = 0;
                 continue;
             }
-            dynStr output = execute(&scanner, op, arg1, arg2, &ok);
+
+            dynStr output = execute(&scanner, op, &arg1, arg2, &ok);
             if (scanner.line[strlen(scanner.line) - 1] != '\n') {
                 fprintf(out_file, "\n");
             }

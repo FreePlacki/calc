@@ -3,6 +3,7 @@
 #include "execute.h"
 #include "helpers.h"
 #include "operation.h"
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +17,7 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
     // pewnie dało by się bez wprowadzania 'i' ale czytelność by się pogorszyła
     unsigned int i = 0;
     while (start[i] != '\0' && start[i] != '\n' && start[i] != ' ') {
-        char c = start[i++];
+        char c = toupper(start[i++]);
         scanner->idx++;
 
         if (!is_digit(c, base)) {
@@ -33,8 +34,9 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
                 *ok = false;
             return;
         }
+        output[i - 1] = c;
     }
-    strncpy(output, start, i);
+
     output[i] = '\0';
 }
 
@@ -83,12 +85,14 @@ oper read_instruction(scanner *scanner, bool *ok) {
         scanner->idx--;
 
         unsigned short base1 = parse_base(scanner, ok);
-        if (!(*ok)) return op;
+        if (!(*ok))
+            return op;
 
         consume_spaces(scanner);
-        
+
         unsigned short base2 = parse_base(scanner, ok);
-        if (!(*ok)) return op;
+        if (!(*ok))
+            return op;
 
         op.base = (base1 << 4) | base2;
         op.op_type = Convert;
@@ -98,7 +102,8 @@ oper read_instruction(scanner *scanner, bool *ok) {
     consume_spaces(scanner);
 
     op.base = parse_base(scanner, ok);
-    if (!(*ok)) return op;
+    if (!(*ok))
+        return op;
 
     consume(scanner, '\n');
 
@@ -114,13 +119,9 @@ oper read_instruction(scanner *scanner, bool *ok) {
         break;
     case '/':
         op.op_type = Div;
-        report(scanner, error, "Działanie jeszcze nie zaimplementowane\n");
-        exit(1);
         break;
     case '%':
         op.op_type = Mod;
-        report(scanner, error, "Działanie jeszcze nie zaimplementowane\n");
-        exit(1);
         break;
     default:
         report(scanner, error, "Nieoczekiwany znak `%c`\n", c);
