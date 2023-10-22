@@ -11,8 +11,6 @@
 #include <windows.h>
 #endif
 
-#define LINE_SIZE 255
-
 int main(int argc, char **argv) {
 #ifdef _WIN32
     SetConsoleOutputCP(65001); // poprawne kodowanie na windowsie
@@ -42,8 +40,8 @@ int main(int argc, char **argv) {
     FILE *out_file = fopen(out_name, "w");
 
     oper op;
-    char arg1[41];
-    char arg2[41];
+    char arg1[ARG_SIZE];
+    char arg2[ARG_SIZE];
     short ctr = 0;
     bool ok = true;
     unsigned int line_idx = 0;

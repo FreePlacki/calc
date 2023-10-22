@@ -9,8 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ARG_SIZE 40
-
 void parse_int(scanner *scanner, char *output, unsigned int len,
                unsigned int base, bool *ok) {
     char *start = scanner->line + scanner->idx;
@@ -94,7 +92,7 @@ oper read_instruction(scanner *scanner, bool *ok) {
         if (!(*ok))
             return op;
 
-        op.base = ((base1-2) << 4) | (base2-2);
+        op.base = ((base1 - 2) << 4) | (base2 - 2);
         op.op_type = Convert;
         return op;
     }

@@ -83,6 +83,16 @@ char int_to_char(int v) {
     return 'A' + v - 10;
 }
 
+void trim_trailing(char *num, char c) {
+    for (int i = strlen(num) - 1; i > 0; i--) {
+        if (num[i] == c) {
+            num[i] = '\0';
+        } else {
+            break;
+        }
+    }
+}
+
 const char *extract_name(const char *path) {
     const char *filename;
 

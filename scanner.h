@@ -4,6 +4,9 @@
 #include "operation.h"
 #include <stdbool.h>
 
+#define ARG_SIZE 40
+#define LINE_SIZE 256
+
 typedef struct {
     char *line;
     unsigned int line_idx;

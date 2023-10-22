@@ -8,94 +8,71 @@
 #include <string.h>
 
 dynStr exec_add(scanner *scanner, short base, char *arg1, char *arg2) {
-    if (strlen(arg1) > strlen(arg2)) {
-        char *t = arg1;
-        arg1 = arg2;
-        arg2 = t;
-    }
+    dynStr result;
+    init_dynStr(&result);
 
     int n1 = strlen(arg1), n2 = strlen(arg2);
 
-    reverse(arg1);
-    reverse(arg2);
-
-    dynStr output;
-    init_dynStr(&output);
-
     int carry = 0;
-    for (int i = 0; i < n2; i++) {
+    int i, j;
+    for (i = n1 - 1, j = n2 - 1; i >= 0; i--, j--) {
         // Możemy (chyba) dać NULL za ok, bo już sprawdziliśmy błędny input
-        int digit1 = i < n1 ? char_to_dec(scanner, arg1[i], base, NULL) : 0;
-        int digit2 = char_to_dec(scanner, arg2[i], base, NULL);
+        int digit1 = (i >= 0) ? char_to_dec(scanner, arg1[i], base, NULL) : 0;
+        int digit2 = (j >= 0) ? char_to_dec(scanner, arg2[j], base, NULL) : 0;
         int sum = digit1 + digit2 + carry;
 
         char c = int_to_char(sum % base);
-        append_char(&output, c);
+        append_char(&result, c);
 
         carry = sum / base;
     }
 
     if (carry) {
         char c = int_to_char(carry);
-        append_char(&output, c);
+        append_char(&result, c);
     }
 
-    reverse(output.data);
-    return output;
+    reverse(result.data);
+    return result;
 }
 
 dynStr exec_sub(scanner *scanner, short base, char *arg1, char *arg2) {
     dynStr result;
     init_dynStr(&result);
 
-    int n1 = strlen(arg1);
-    int n2 = strlen(arg2);
+    int n1 = strlen(arg1), n2 = strlen(arg2);
 
     if (n1 < n2) {
         append_char(&result, '0');
         return result;
     }
 
-    int borrow = 0;
+    int carry = 0;
     int i, j;
     for (i = n1 - 1, j = n2 - 1; i >= 0; i--, j--) {
         int digit1 = char_to_dec(scanner, arg1[i], base, NULL);
         int digit2 = j >= 0 ? char_to_dec(scanner, arg2[j], base, NULL) : 0;
-        int diff = digit1 - digit2 - borrow;
+        int diff = digit1 - digit2 - carry;
 
         if (diff < 0) {
             diff += base;
-            borrow = 1;
+            carry = 1;
         } else {
-            borrow = 0;
+            carry = 0;
         }
 
         char c = int_to_char(diff);
         append_char(&result, c);
     }
 
-    // Remove leading zeros
-    for (int i = result.size - 1; i > 0; i--) {
-        if (result.data[i] == '0') {
-            result.data[i] = '\0';
-        } else {
-            break;
-        }
-    }
+    trim_trailing(result.data, '0');
     reverse(result.data);
 
     return result;
 }
 
 dynStr exec_mul(scanner *scanner, short base, char *arg1, char *arg2) {
-    int n1 = strlen(arg1);
-    int n2 = strlen(arg2);
-
-    // TODO: get rid of reverse
-    char *arg1_r = strdup(arg1);
-    reverse(arg1_r);
-    char *arg2_r = strdup(arg2);
-    reverse(arg2_r);
+    int n1 = strlen(arg1), n2 = strlen(arg2);
 
     dynStr result;
     init_dynStr(&result);
@@ -103,40 +80,38 @@ dynStr exec_mul(scanner *scanner, short base, char *arg1, char *arg2) {
         append_char(&result, '0');
     }
 
-    for (int i = 0; i < n1; i++) {
+    for (int i = n1 - 1; i >= 0; i--) {
         int carry = 0;
-        int digit1 = char_to_dec(scanner, arg1_r[i], base, NULL);
+        int digit1 = char_to_dec(scanner, arg1[i], base, NULL);
 
-        for (int j = 0; j < n2; j++) {
-            int digit2 = char_to_dec(scanner, arg2_r[j], base, NULL);
-            int product = digit1 * digit2 + carry +
-                          char_to_dec(scanner, result.data[i + j], base, NULL);
+        for (int j = n2 - 1; j >= 0; j--) {
+            int digit2 = char_to_dec(scanner, arg2[j], base, NULL);
+            int product =
+                digit1 * digit2 + carry +
+                char_to_dec(scanner, result.data[n1 + n2 - (i + j) - 2], base,
+                            NULL);
 
             carry = product / base;
-            result.data[i + j] = int_to_char(product % base);
+            result.data[n1 + n2 - (i + j) - 2] = int_to_char(product % base);
         }
 
         if (carry > 0) {
-            result.data[i + n2] = int_to_char(
-                char_to_dec(scanner, result.data[i + n2], base, NULL) + carry);
+            result.data[n1 - i + n2 - 1] = int_to_char(
+                char_to_dec(scanner, result.data[n1 - i + n2 - 1], base, NULL) +
+                carry);
         }
     }
 
-    for (int i = result.size - 1; i > 0; i--) {
-        if (result.data[i] == '0') {
-            result.data[i] = '\0';
-        } else {
-            break;
-        }
-    }
-
+    trim_trailing(result.data, '0');
     reverse(result.data);
+
     return result;
 }
 
 int compare(char *arg1, char *arg2) {
     int len1 = strlen(arg1);
     int len2 = strlen(arg2);
+
     if (len1 > len2) {
         return 1;
     } else if (len1 < len2) {
@@ -161,27 +136,36 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
 
     dynStr remaining;
     init_dynStr(&remaining); // have to init if res = 0
-    while (compare(arg1, arg2) >= 0) {
-        remaining = exec_sub(scanner, base, arg1, arg2);
-        arg1 = remaining.data;
-        result = exec_add(scanner, base, result.data, "1");
+
+    int index = 0;
+
+    while (arg1[index] != '\0') {
+        append_char(&remaining, arg1[index]);
+
+        int quotient = 0;
+        while (compare(remaining.data, arg2) >= 0) {
+            remaining = exec_sub(scanner, base, remaining.data, arg2);
+            quotient++;
+        }
+
+        char c = int_to_char(quotient);
+        append_char(&result, c);
+        index++;
     }
 
     if (m != NULL) {
-        if (remaining.size == 0) {
-            for (int i = 0; i < strlen(arg1); i++) {
-                m[i] = arg1[i];
-            }
-            m[strlen(arg1)] = '\0';
-        } else {
-            for (int i = 0; i < strlen(remaining.data); i++) {
-                m[i] = remaining.data[i];
-            }
-            m[strlen(remaining.data)] = '\0';
+        for (int i = 0; i < remaining.size; i++) {
+            m[i] = remaining.data[i];
         }
+        m[remaining.size] = '\0';
     }
 
     free_dynStr(&remaining);
+    trim_trailing(result.data, '0');
+    // TODO: trim leading 0s
+    //
+    // while (strlen(result.data) > 1 && result.data[0] == '0')
+    //     result.data++;
 
     return result;
 }
@@ -194,6 +178,7 @@ dynStr exec_mod(scanner *scanner, short base, char *arg1, char *arg2,
     dynStr result;
     init_dynStr(&result);
 
+    // TODO: implement dynStr::from
     for (int i = 0; i < strlen(mod); i++) {
         append_char(&result, mod[i]);
     }
@@ -237,10 +222,9 @@ dynStr exec_convert(scanner *scanner, short fromBase, short toBase, char *arg) {
         if (div.data[0] == '0')
             break;
     }
+
     free_dynStr(&div);
-
     reverse(result.data);
-
     return result;
 }
 
@@ -248,7 +232,6 @@ dynStr exec_pow(scanner *scanner, short base, char *arg1, char *arg2) {
     dynStr result;
     init_dynStr(&result);
     append_char(&result, '1');
-
 
     unsigned long long exp = atol(to_dec(base, arg2).data);
     if (atoi(to_dec(base, arg1).data) == 1 || exp == 0) {
