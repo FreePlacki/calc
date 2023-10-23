@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include "operation.h"
 #include "scanner.h"
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,11 +40,14 @@ int main(int argc, char **argv) {
     }
     FILE *out_file = fopen(out_name, "w");
 
-    oper op;
     char arg1[ARG_SIZE];
     char arg2[ARG_SIZE];
-    short ctr = 0;
+    dynStr result;
+    init_dynStr(&result);
+
+    oper op;
     bool ok = true;
+    short ctr = 0;
     unsigned int line_idx = 0;
     char buffer[LINE_SIZE];
     while (fgets(buffer, sizeof(buffer), in_file) != NULL) {
@@ -67,6 +71,17 @@ int main(int argc, char **argv) {
         scanner.idx = 0;
         scanner.line_idx = line_idx;
         scanner.line = buffer;
+
+        // if (ctr == 0) {
+        //     if (is_argument(buffer)) {
+        //         // TODO
+        //         // result.data = read_arg(&scanner, res, unsigned int base, bool *ok)
+        //     }
+        //     op = read_instruction(&scanner, &ok);
+        //     if (op.op_type == Convert) {
+        //         // TODO: keep the fromBase in the op, decode when executing
+        //     }
+        // }
 
         if (ctr == 0) {
             op = read_instruction(&scanner, &ok);

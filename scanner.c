@@ -54,6 +54,17 @@ unsigned short parse_base(scanner *scanner, bool *ok) {
     return res;
 }
 
+bool is_argument(char *line) {
+    int i = 0;
+    while (line[i] != '\n' && line[i] != '\0') {
+        if (!is_digit(line[i], 16))
+            return false;
+        i++;
+    }
+    
+    return true;
+}
+
 char advance(scanner *scanner) { return scanner->line[scanner->idx++]; }
 
 void consume(scanner *scanner, char c) {

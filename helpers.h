@@ -14,6 +14,7 @@ typedef struct {
 } dynStr;
 
 void init_dynStr(dynStr *str);
+void dynStr_from(dynStr *str, char *s);
 void append_char(dynStr *str, char c);
 void free_dynStr(dynStr *str);
 
@@ -22,7 +23,8 @@ void reverse(char *str);
 bool is_digit(char c, unsigned int base);
 int char_to_dec(scanner *scanner, char c, unsigned int base, bool *ok);
 char int_to_char(int v);
-void trim_trailing(char *num, char c);
+void trim_trailing(dynStr *num, char c);
+void trim_leading(dynStr *num, char c);
 const char *extract_name(const char *path);
 
 #endif

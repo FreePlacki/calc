@@ -24,6 +24,13 @@ void init_dynStr(dynStr *str) {
     str->data[0] = '\0';
 }
 
+void dynStr_from(dynStr *str, char *s) {
+    int len = strlen(s);
+    str->size = len;
+    str->capacity = len;
+    str->data = strdup(s);
+}
+
 void append_char(dynStr *str, char c) {
     if (str->size + 1 >= str->capacity) {
         str->capacity *= 2;
@@ -83,13 +90,33 @@ char int_to_char(int v) {
     return 'A' + v - 10;
 }
 
-void trim_trailing(char *num, char c) {
-    for (int i = strlen(num) - 1; i > 0; i--) {
-        if (num[i] == c) {
-            num[i] = '\0';
+void trim_trailing(dynStr *num, char c) {
+    for (int i = num->size - 1; i > 0; i--) {
+        if (num->data[i] == c) {
+            num->data[i] = '\0';
         } else {
+            num->size = i;
             break;
         }
+    }
+    num->size = 1;
+}
+
+void trim_leading(dynStr *num, char c) {
+    int i = 0;
+
+    while (num->data[i] == c) {
+        i++;
+    }
+
+    // If the entire string is '0', keep one zero
+    if (i == num->size) {
+        num->data[1] = '\0';
+        num->size = 1;
+    } else {
+        // Shift the non-zero part to the beginning of the string
+        memmove(num->data, num->data + i, num->size - i + 1);
+        num->size -= i;
     }
 }
 

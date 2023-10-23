@@ -65,7 +65,7 @@ dynStr exec_sub(scanner *scanner, short base, char *arg1, char *arg2) {
         append_char(&result, c);
     }
 
-    trim_trailing(result.data, '0');
+    trim_trailing(&result, '0');
     reverse(result.data);
 
     return result;
@@ -102,7 +102,7 @@ dynStr exec_mul(scanner *scanner, short base, char *arg1, char *arg2) {
         }
     }
 
-    trim_trailing(result.data, '0');
+    trim_trailing(&result, '0');
     reverse(result.data);
 
     return result;
@@ -138,7 +138,6 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
     init_dynStr(&remaining); // have to init if res = 0
 
     int index = 0;
-
     while (arg1[index] != '\0') {
         append_char(&remaining, arg1[index]);
 
@@ -148,24 +147,19 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
             quotient++;
         }
 
+        // TODO: don't add leading 0s
         char c = int_to_char(quotient);
         append_char(&result, c);
         index++;
     }
 
-    if (m != NULL) {
-        for (int i = 0; i < remaining.size; i++) {
-            m[i] = remaining.data[i];
-        }
-        m[remaining.size] = '\0';
+    if (m) {
+        strcpy(m, remaining.data);
     }
 
     free_dynStr(&remaining);
-    trim_trailing(result.data, '0');
-    // TODO: trim leading 0s
-    //
-    // while (strlen(result.data) > 1 && result.data[0] == '0')
-    //     result.data++;
+    // trim_trailing(result.data, '0');
+    trim_leading(&result, '0');
 
     return result;
 }
@@ -216,8 +210,11 @@ dynStr exec_convert(scanner *scanner, short fromBase, short toBase, char *arg) {
         char mod[2];
         char to[2];
         sprintf(to, "%d", toBase);
+        // dbg("Dividing: %s", div.data);
+        // dbg("by: %s", to);
         div = exec_div(scanner, 10, div.data, to, mod, NULL);
-        mod[1] = '\0';
+        // dbg("res: %s", div.data);
+        // dbg("mod: %s", mod);
         append_char(&result, mod[0]);
         if (div.data[0] == '0')
             break;
@@ -233,7 +230,7 @@ dynStr exec_pow(scanner *scanner, short base, char *arg1, char *arg2) {
     init_dynStr(&result);
     append_char(&result, '1');
 
-    unsigned long long exp = atol(to_dec(base, arg2).data);
+    unsigned long exp = atol(to_dec(base, arg2).data);
     if (atoi(to_dec(base, arg1).data) == 1 || exp == 0) {
         return result;
     }
