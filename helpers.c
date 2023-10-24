@@ -50,7 +50,7 @@ void free_dynStr(dynStr *str) {
 
 bool is_digit(char c, unsigned int base) {
     bool ok = true;
-    char_to_dec(NULL, c, base, &ok);
+    char_to_dec(c, base, &ok);
     return ok;
 }
 
@@ -63,7 +63,7 @@ void reverse(char *str) {
     }
 }
 
-int char_to_dec(scanner *scanner, char c, unsigned int base, bool *ok) {
+int char_to_dec(char c, short base, bool *ok) {
     int res;
     if (c >= '0' && c <= '9') {
         res = c - '0';
@@ -103,7 +103,7 @@ void trim_trailing(dynStr *num, char c) {
 }
 
 void trim_leading(dynStr *num, char c) {
-    int i = 0;
+    size_t i = 0;
 
     while (num->data[i] == c) {
         i++;

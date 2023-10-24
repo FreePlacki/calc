@@ -79,15 +79,13 @@ int main(int argc, char **argv) {
         //     }
         //     op = read_instruction(&scanner, &ok);
         //     if (op.op_type == Convert) {
-        //         // TODO: keep the fromBase in the op, decode when executing
         //     }
         // }
 
         if (ctr == 0) {
             op = read_instruction(&scanner, &ok);
             if (op.op_type == Convert) {
-                sprintf(arg1, "%d", (op.base & 0xF) + 2);
-                op.base = (op.base >> 4) + 2;
+                // skip arg1
                 ctr = 2;
                 continue;
             }

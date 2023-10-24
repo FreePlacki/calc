@@ -2,6 +2,7 @@
 #include "error.h"
 #include "helpers.h"
 #include "scanner.h"
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,8 +18,8 @@ dynStr exec_add(scanner *scanner, short base, char *arg1, char *arg2) {
     int i, j;
     for (i = n1 - 1, j = n2 - 1; i >= 0; i--, j--) {
         // Możemy (chyba) dać NULL za ok, bo już sprawdziliśmy błędny input
-        int digit1 = (i >= 0) ? char_to_dec(scanner, arg1[i], base, NULL) : 0;
-        int digit2 = (j >= 0) ? char_to_dec(scanner, arg2[j], base, NULL) : 0;
+        int digit1 = (i >= 0) ? char_to_dec(arg1[i], base, NULL) : 0;
+        int digit2 = (j >= 0) ? char_to_dec(arg2[j], base, NULL) : 0;
         int sum = digit1 + digit2 + carry;
 
         char c = int_to_char(sum % base);
@@ -50,8 +51,8 @@ dynStr exec_sub(scanner *scanner, short base, char *arg1, char *arg2) {
     int carry = 0;
     int i, j;
     for (i = n1 - 1, j = n2 - 1; i >= 0; i--, j--) {
-        int digit1 = char_to_dec(scanner, arg1[i], base, NULL);
-        int digit2 = j >= 0 ? char_to_dec(scanner, arg2[j], base, NULL) : 0;
+        int digit1 = char_to_dec(arg1[i], base, NULL);
+        int digit2 = j >= 0 ? char_to_dec(arg2[j], base, NULL) : 0;
         int diff = digit1 - digit2 - carry;
 
         if (diff < 0) {
@@ -82,14 +83,13 @@ dynStr exec_mul(scanner *scanner, short base, char *arg1, char *arg2) {
 
     for (int i = n1 - 1; i >= 0; i--) {
         int carry = 0;
-        int digit1 = char_to_dec(scanner, arg1[i], base, NULL);
+        int digit1 = char_to_dec(arg1[i], base, NULL);
 
         for (int j = n2 - 1; j >= 0; j--) {
-            int digit2 = char_to_dec(scanner, arg2[j], base, NULL);
+            int digit2 = char_to_dec(arg2[j], base, NULL);
             int product =
                 digit1 * digit2 + carry +
-                char_to_dec(scanner, result.data[n1 + n2 - (i + j) - 2], base,
-                            NULL);
+                char_to_dec(result.data[n1 + n2 - (i + j) - 2], base, NULL);
 
             carry = product / base;
             result.data[n1 + n2 - (i + j) - 2] = int_to_char(product % base);
@@ -97,8 +97,7 @@ dynStr exec_mul(scanner *scanner, short base, char *arg1, char *arg2) {
 
         if (carry > 0) {
             result.data[n1 - i + n2 - 1] = int_to_char(
-                char_to_dec(scanner, result.data[n1 - i + n2 - 1], base, NULL) +
-                carry);
+                char_to_dec(result.data[n1 - i + n2 - 1], base, NULL) + carry);
         }
     }
 
@@ -170,12 +169,7 @@ dynStr exec_mod(scanner *scanner, short base, char *arg1, char *arg2,
     exec_div(scanner, base, arg1, arg2, mod, ok);
 
     dynStr result;
-    init_dynStr(&result);
-
-    // TODO: implement dynStr::from
-    for (int i = 0; i < strlen(mod); i++) {
-        append_char(&result, mod[i]);
-    }
+    dynStr_from(&result, mod);
 
     return result;
 }
@@ -185,12 +179,12 @@ dynStr to_dec(short from, char *arg) {
     init_dynStr(&result);
     append_char(&result, '0'); // TODO: handle 0
 
-    char from_s[3];
+    char from_s[8];
     sprintf(from_s, "%d", from);
     int len = strlen(arg);
     for (int i = 0; i < len; i++) {
-        int val = char_to_dec(NULL, arg[i], from, NULL);
-        char val_s[3];
+        int val = char_to_dec(arg[i], from, NULL);
+        char val_s[8];
         sprintf(val_s, "%d", val);
 
         result = exec_add(NULL, 10, result.data, val_s);
@@ -201,20 +195,19 @@ dynStr to_dec(short from, char *arg) {
     return result;
 }
 
-dynStr exec_convert(scanner *scanner, short fromBase, short toBase, char *arg) {
-    dynStr div = to_dec(fromBase, arg);
+dynStr exec_convert(scanner *scanner, short base, char *arg) {
+    short from = (base >> 4) + 2;
+    short to = (base & 0xF) + 2;
+
+    dynStr div = to_dec(from, arg);
     dynStr result;
     init_dynStr(&result);
 
     while (true) {
-        char mod[2];
-        char to[2];
-        sprintf(to, "%d", toBase);
-        // dbg("Dividing: %s", div.data);
-        // dbg("by: %s", to);
-        div = exec_div(scanner, 10, div.data, to, mod, NULL);
-        // dbg("res: %s", div.data);
-        // dbg("mod: %s", mod);
+        char mod[1];
+        char to_str[4];
+        sprintf(to_str, "%d", to);
+        div = exec_div(scanner, 10, div.data, to_str, mod, NULL);
         append_char(&result, mod[0]);
         if (div.data[0] == '0')
             break;
@@ -262,6 +255,8 @@ dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2, bool *ok) {
     case Mod:
         return exec_mod(scanner, op.base, arg1, arg2, ok);
     case Convert:
-        return exec_convert(scanner, op.base, atoi(arg1), arg2);
+        return exec_convert(scanner, op.base, arg2);
+    default:
+        assert("Unreachable" && 0);
     }
 }

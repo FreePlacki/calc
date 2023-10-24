@@ -88,6 +88,8 @@ void read_arg(scanner *scanner, char *output, unsigned int base, bool *ok) {
 
 oper read_instruction(scanner *scanner, bool *ok) {
     oper op;
+    op.op_type = Add;
+    op.base = 0;
     char c = advance(scanner);
 
     if (is_digit(c, 10)) {
