@@ -41,7 +41,6 @@ int main(int argc, char **argv) {
     FILE *out_file = fopen(out_name, "w");
 
     dynStr result;
-    init_dynStr(&result);
 
     oper op;
     bool ok = true;
@@ -56,12 +55,12 @@ int main(int argc, char **argv) {
         }
 
         if (!ok) {
-            // if (ctr != 0) {
-            //     ctr = (ctr + 1) % 3;
-            //     continue;
-            // }
-            // TODO: fix has_args set
-            ok = true;
+            if (!is_argument(buffer)) {
+                has_args = false;
+                ok = true;
+            } else {
+                continue;
+            }
         }
 
         scanner scanner;
@@ -69,38 +68,32 @@ int main(int argc, char **argv) {
         scanner.line_idx = line_idx;
         scanner.line = buffer;
 
-        if (!has_args) {
-            if (is_argument(buffer)) {
-                char arg[40];
-                read_arg(&scanner, arg, op.base, &ok);
-                dynStr_from(&result, arg);
-                has_args = true;
+        char arg[ARG_SIZE];
+
+        if (is_argument(buffer)) {
+            read_arg(&scanner, arg, op.base, &ok);
+            if (has_args) {
+                result = execute(&scanner, op, result.data, arg, &ok);
             } else {
-                op = read_instruction(&scanner, &ok);
-                if (op.op_type == Convert) {
-                    has_args = true;
-                }
+                dynStr_from(&result, arg);
             }
+            has_args = true;
         } else {
-            if (!is_argument(buffer)) {
+            if (has_args) {
                 fprintf(out_file, "%s\n", result.data);
                 free_dynStr(&result);
-                op = read_instruction(&scanner, &ok);
-                has_args = false;
-                if (op.op_type == Convert) {
-                    has_args = true;
-                }
-            } else {
-                char arg[40];
-                read_arg(&scanner, arg, op.base, &ok);
-                result = execute(&scanner, op, result.data, arg, &ok);
             }
+            op = read_instruction(&scanner, &ok);
+            has_args = op.op_type == Convert;
         }
+
         fprintf(out_file, "%s", buffer);
     }
 
-    fprintf(out_file, "%s\n", result.data);
-    free_dynStr(&result);
+    if (result.data) {
+        fprintf(out_file, "%s\n", result.data);
+        free_dynStr(&result);
+    }
 
     fclose(in_file);
     fclose(out_file);

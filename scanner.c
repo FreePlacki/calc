@@ -84,6 +84,9 @@ void consume_spaces(scanner *scanner) {
 
 void read_arg(scanner *scanner, char *output, unsigned int base, bool *ok) {
     parse_int(scanner, output, ARG_SIZE, base, ok);
+    // TODO: fix ok not setting
+    //
+    // dbg("%d", *ok);
 }
 
 oper read_instruction(scanner *scanner, bool *ok) {
