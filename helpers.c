@@ -54,6 +54,11 @@ bool is_digit(char c, unsigned int base) {
     return ok;
 }
 
+bool is_unknown_char(char c) {
+    return !((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') ||
+             (c == '+' || c == '*' || c == '/' || c == '%' || c == '^'));
+}
+
 void reverse(char *str) {
     int length = strlen(str);
     for (int i = 0, j = length - 1; i < j; i++, j--) {

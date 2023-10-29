@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-dynStr exec_add(scanner *scanner, short base, char *arg1, char *arg2) {
+dynStr exec_add(short base, char *arg1, char *arg2) {
     dynStr result;
     init_dynStr(&result);
 
@@ -37,7 +37,7 @@ dynStr exec_add(scanner *scanner, short base, char *arg1, char *arg2) {
     return result;
 }
 
-dynStr exec_sub(scanner *scanner, short base, char *arg1, char *arg2) {
+dynStr exec_sub(short base, char *arg1, char *arg2) {
     dynStr result;
     init_dynStr(&result);
 
@@ -72,7 +72,7 @@ dynStr exec_sub(scanner *scanner, short base, char *arg1, char *arg2) {
     return result;
 }
 
-dynStr exec_mul(scanner *scanner, short base, char *arg1, char *arg2) {
+dynStr exec_mul(short base, char *arg1, char *arg2) {
     int n1 = strlen(arg1), n2 = strlen(arg2);
 
     dynStr result;
@@ -126,7 +126,6 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
     append_char(&result, '0');
 
     if (arg2[0] == '0') {
-        // TODO: hande a case like arg2 = '01'
         report(scanner, error, "Division by 0!\n");
         if (ok)
             *ok = false;
@@ -142,7 +141,7 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
 
         int quotient = 0;
         while (compare(remaining.data, arg2) >= 0) {
-            remaining = exec_sub(scanner, base, remaining.data, arg2);
+            remaining = exec_sub(base, remaining.data, arg2);
             quotient++;
         }
 
@@ -157,7 +156,6 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
     }
 
     free_dynStr(&remaining);
-    // trim_trailing(result.data, '0');
     trim_leading(&result, '0');
 
     return result;
@@ -169,15 +167,18 @@ dynStr exec_mod(scanner *scanner, short base, char *arg1, char *arg2,
     exec_div(scanner, base, arg1, arg2, mod, ok);
 
     dynStr result;
-    dynStr_from(&result, mod);
+    if (*ok) {
+        dynStr_from(&result, mod);
+    }
 
+    dbg("%d", *ok);
     return result;
 }
 
 dynStr to_dec(short from, char *arg) {
     dynStr result;
     init_dynStr(&result);
-    append_char(&result, '0'); // TODO: handle 0
+    append_char(&result, '0');
 
     char from_s[8];
     sprintf(from_s, "%d", from);
@@ -187,9 +188,9 @@ dynStr to_dec(short from, char *arg) {
         char val_s[8];
         sprintf(val_s, "%d", val);
 
-        result = exec_add(NULL, 10, result.data, val_s);
+        result = exec_add(10, result.data, val_s);
         if (i != len - 1)
-            result = exec_mul(NULL, 10, result.data, from_s);
+            result = exec_mul(10, result.data, from_s);
     }
 
     return result;
@@ -218,7 +219,7 @@ dynStr exec_convert(scanner *scanner, short base, char *arg) {
     return result;
 }
 
-dynStr exec_pow(scanner *scanner, short base, char *arg1, char *arg2) {
+dynStr exec_pow(short base, char *arg1, char *arg2) {
     dynStr result;
     init_dynStr(&result);
     append_char(&result, '1');
@@ -232,11 +233,11 @@ dynStr exec_pow(scanner *scanner, short base, char *arg1, char *arg2) {
     // 2 ^ FFFFF zajmuje ~2min
     while (true) {
         if (exp & 1)
-            result = exec_mul(scanner, 10, result.data, arg1);
+            result = exec_mul(10, result.data, arg1);
         exp >>= 1;
         if (!exp)
             break;
-        arg1 = exec_mul(scanner, base, arg1, arg1).data;
+        arg1 = exec_mul(base, arg1, arg1).data;
     }
 
     return result;
@@ -245,11 +246,11 @@ dynStr exec_pow(scanner *scanner, short base, char *arg1, char *arg2) {
 dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2, bool *ok) {
     switch (op.op_type) {
     case Add:
-        return exec_add(scanner, op.base, arg1, arg2);
+        return exec_add(op.base, arg1, arg2);
     case Mul:
-        return exec_mul(scanner, op.base, arg1, arg2);
+        return exec_mul(op.base, arg1, arg2);
     case Pow:
-        return exec_pow(scanner, op.base, arg1, arg2);
+        return exec_pow(op.base, arg1, arg2);
     case Div:
         return exec_div(scanner, op.base, arg1, arg2, NULL, ok);
     case Mod:

@@ -12,11 +12,23 @@
 void parse_int(scanner *scanner, char *output, unsigned int len,
                unsigned int base, bool *ok) {
     char *start = scanner->line + scanner->idx;
-    // pewnie dało by się bez wprowadzania 'i' ale czytelność by się pogorszyła
     unsigned int i = 0;
+
+    // ucinamy 0 poprzedzające liczbę (np. 002 -> 2, 00 -> 0)
+    while (start[0] == '0' && start[2] != '\0') {
+        start++;
+    }
+
     while (start[i] != '\0' && start[i] != '\n' && start[i] != ' ') {
         char c = toupper(start[i++]);
         scanner->idx++;
+
+        if (is_unknown_char(c)) {
+            report(scanner, error, "Nieoczekiwany znak `%c`\n", c);
+            if (ok)
+                *ok = false;
+            return;
+        }
 
         if (!is_digit(c, base)) {
             report(scanner, error, "Nie można użyć `%c` w liczbie o bazie %d\n",
@@ -25,6 +37,7 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
                 *ok = false;
             return;
         }
+
         if (i > len) {
             report(scanner, error,
                    "Długość argumentu nie może przekraczać %d\n", len);
@@ -32,6 +45,7 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
                 *ok = false;
             return;
         }
+
         output[i - 1] = c;
     }
 
@@ -55,13 +69,18 @@ unsigned short parse_base(scanner *scanner, bool *ok) {
 }
 
 bool is_argument(char *line) {
+    // traktujemy nieznane znaki jako argument aby potem
+    // w parsowaniu wyrzucić błąd
+    if (is_unknown_char(line[0]))
+        return true;
+
     int i = 0;
     while (line[i] != '\n' && line[i] != '\0') {
         if (!is_digit(line[i], 16))
             return false;
         i++;
     }
-    
+
     return true;
 }
 
@@ -76,7 +95,6 @@ void consume(scanner *scanner, char c) {
 }
 
 void consume_spaces(scanner *scanner) {
-    // TODO: implement current(scanner)
     while (scanner->line[scanner->idx] == ' ') {
         advance(scanner);
     }
@@ -84,9 +102,6 @@ void consume_spaces(scanner *scanner) {
 
 void read_arg(scanner *scanner, char *output, unsigned int base, bool *ok) {
     parse_int(scanner, output, ARG_SIZE, base, ok);
-    // TODO: fix ok not setting
-    //
-    // dbg("%d", *ok);
 }
 
 oper read_instruction(scanner *scanner, bool *ok) {

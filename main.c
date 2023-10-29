@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include "operation.h"
 #include "scanner.h"
+#include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -50,7 +51,7 @@ int main(int argc, char **argv) {
     while (fgets(buffer, sizeof(buffer), in_file) != NULL) {
         line_idx++;
 
-        if (buffer[0] == '\n') {
+        if (buffer[0] == '\n' || buffer[0] == '#') {
             continue;
         }
 
@@ -61,6 +62,10 @@ int main(int argc, char **argv) {
             } else {
                 continue;
             }
+        }
+
+        for (int i = 0; buffer[i]; i++) {
+            buffer[i] = toupper(buffer[i]);
         }
 
         scanner scanner;

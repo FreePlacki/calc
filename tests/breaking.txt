@@ -1,9 +1,7 @@
-fasfs
+/ 10
+2
+0
 
-sfafo89u
-
-
-fw  
-
- 
-    fdafa
+% 3
+2
+0
