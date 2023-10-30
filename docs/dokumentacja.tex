@@ -1,0 +1,41 @@
+\documentclass[12pt]{article}
+
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc} % polish symbols
+
+\usepackage{minted}
+
+\newenvironment{code} {
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt]{c}
+    
+\end{minted}
+}
+
+\title{Dokumentacja projektu}
+\author{Paweł Bielecki}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+
+\section{Założenia projektu}
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt]{c}
+int main() {
+    printf("Hello World");
+}
+\end{minted}
+
+
+\section{Narzędzia}
+\section{Ogólny opis rozwiązania}
+\section{Szczegóły}
+\section{Podsumowanie}
+
+\end{document}
