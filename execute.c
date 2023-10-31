@@ -144,8 +144,11 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
             remaining = exec_sub(base, remaining.data, arg2);
             quotient++;
         }
+        // reset remaining size
+        if (quotient) {
+            dynStr_from(&remaining, remaining.data);
+        }
 
-        // TODO: don't add leading 0s
         char c = int_to_char(quotient);
         append_char(&result, c);
         index++;
@@ -171,7 +174,6 @@ dynStr exec_mod(scanner *scanner, short base, char *arg1, char *arg2,
         dynStr_from(&result, mod);
     }
 
-    dbg("%d", *ok);
     return result;
 }
 

@@ -17,7 +17,6 @@ int main(int argc, char **argv) {
 #ifdef _WIN32
     SetConsoleOutputCP(65001); // poprawne kodowanie na windowsie
 #endif
-
     if (argc == 1 || argc > 3) {
         print_help(argv[0]);
         exit(1);
