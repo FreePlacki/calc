@@ -16,7 +16,7 @@ dynStr exec_add(short base, char *arg1, char *arg2) {
 
     int carry = 0;
     int i, j;
-    for (i = n1 - 1, j = n2 - 1; i >= 0; i--, j--) {
+    for (i = n1 - 1, j = n2 - 1; i >= 0 || j >= 0; i--, j--) {
         // Możemy (chyba) dać NULL za ok, bo już sprawdziliśmy błędny input
         int digit1 = (i >= 0) ? char_to_dec(arg1[i], base, NULL) : 0;
         int digit2 = (j >= 0) ? char_to_dec(arg2[j], base, NULL) : 0;
@@ -138,8 +138,10 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
     int index = 0;
     while (arg1[index] != '\0') {
         append_char(&remaining, arg1[index]);
+        trim_leading(&remaining, '0');
 
         int quotient = 0;
+        // dbg("%s", remaining.data);
         while (compare(remaining.data, arg2) >= 0) {
             remaining = exec_sub(base, remaining.data, arg2);
             quotient++;
@@ -147,8 +149,10 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
         // reset remaining size
         if (quotient) {
             dynStr_from(&remaining, remaining.data);
+            trim_leading(&remaining, '0');
         }
 
+        // dbg("%d", quotient);
         char c = int_to_char(quotient);
         append_char(&result, c);
         index++;
@@ -186,7 +190,7 @@ dynStr to_dec(short from, char *arg) {
     sprintf(from_s, "%d", from);
     int len = strlen(arg);
     for (int i = 0; i < len; i++) {
-        int val = char_to_dec(arg[i], from, NULL);
+        int val = char_to_dec(arg[i], 16, NULL);
         char val_s[8];
         sprintf(val_s, "%d", val);
 
@@ -232,10 +236,10 @@ dynStr exec_pow(short base, char *arg1, char *arg2) {
     }
 
     // https://stackoverflow.com/questions/101439/the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
-    // 2 ^ FFFFF zajmuje ~2min
     while (true) {
         if (exp & 1)
-            result = exec_mul(10, result.data, arg1);
+            result = exec_mul(16, result.data, arg1);
+        // dynStr_from(&result, exec_mul(16, result.data, arg1).data);
         exp >>= 1;
         if (!exp)
             break;
