@@ -170,7 +170,7 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
 
 dynStr exec_mod(scanner *scanner, short base, char *arg1, char *arg2,
                 bool *ok) {
-    char mod[40];
+    char mod[ARG_SIZE];
     exec_div(scanner, base, arg1, arg2, mod, ok);
 
     dynStr result;
@@ -205,6 +205,7 @@ dynStr to_dec(short from, char *arg) {
 dynStr exec_convert(scanner *scanner, short base, char *arg) {
     short from = (base >> 4) + 2;
     short to = (base & 0xF) + 2;
+    dbg("%d", from);
 
     dynStr div = to_dec(from, arg);
     dynStr result;
@@ -238,7 +239,7 @@ dynStr exec_pow(short base, char *arg1, char *arg2) {
     // https://stackoverflow.com/questions/101439/the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
     while (true) {
         if (exp & 1)
-            result = exec_mul(16, result.data, arg1);
+            result = exec_mul(base, result.data, arg1);
         // dynStr_from(&result, exec_mul(16, result.data, arg1).data);
         exp >>= 1;
         if (!exp)

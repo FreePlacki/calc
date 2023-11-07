@@ -4,7 +4,7 @@
 #include "operation.h"
 #include <stdbool.h>
 
-#define ARG_SIZE 40
+#define ARG_SIZE 41
 #define LINE_SIZE 256
 
 typedef struct {

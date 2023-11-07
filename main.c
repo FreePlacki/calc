@@ -13,6 +13,11 @@
 #include <windows.h>
 #endif
 
+void dump_result(FILE *out_file, dynStr *result) {
+    fprintf(out_file, "%s\n", result->data);
+    free_dynStr(result);
+}
+
 int main(int argc, char **argv) {
 #ifdef _WIN32
     SetConsoleOutputCP(65001); // poprawne kodowanie na windowsie
@@ -44,9 +49,9 @@ int main(int argc, char **argv) {
 
     oper op;
     bool ok = true;
-    bool has_args = false;
     unsigned int line_idx = 0;
     char buffer[LINE_SIZE];
+    int arg_count = 0;
     while (fgets(buffer, sizeof(buffer), in_file) != NULL) {
         line_idx++;
 
@@ -56,7 +61,7 @@ int main(int argc, char **argv) {
 
         if (!ok) {
             if (!is_argument(buffer)) {
-                has_args = false;
+                arg_count = 0;
                 ok = true;
             } else {
                 continue;
@@ -75,29 +80,42 @@ int main(int argc, char **argv) {
         char arg[ARG_SIZE];
 
         if (is_argument(buffer)) {
-            read_arg(&scanner, arg, op.base, &ok);
-            if (has_args) {
+            int base = op.op_type == Convert ? (op.base >> 4) + 2 : op.base;
+            read_arg(&scanner, arg, base, &ok);
+            if (arg_count > 0 || op.op_type == Convert) {
                 result = execute(&scanner, op, result.data, arg, &ok);
+                if (op.op_type == Convert) {
+                    fprintf(out_file, "%s\n", arg);
+                    dump_result(out_file, &result);
+                    continue;
+                }
             } else {
                 dynStr_from(&result, arg);
             }
-            has_args = true;
+            arg_count++;
         } else {
-            if (has_args) {
-                fprintf(out_file, "%s\n", result.data);
-                free_dynStr(&result);
+            if (arg_count > 1) {
+                dump_result(out_file, &result);
+            } else {
+                // nie dajemy scannera bo musiałby się odnosić do buffera z
+                // poprzednich pętli
+                if (line_idx != 1 && op.op_type != Convert)
+                    report(NULL, warning,
+                           "Operacja przyjmuje przynajmniej 2 argumenty, "
+                           "otrzymano "
+                           "%d\n",
+                           arg_count);
             }
             op = read_instruction(&scanner, &ok);
-            has_args = op.op_type == Convert;
+            arg_count = 0;
         }
 
         fprintf(out_file, "%s", buffer);
     }
 
-    if (result.data) {
-        fprintf(out_file, "%s\n", result.data);
-        free_dynStr(&result);
-    }
+    if (result.data)
+        dump_result(out_file, &result);
+
 
     fclose(in_file);
     fclose(out_file);
