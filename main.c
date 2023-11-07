@@ -14,7 +14,7 @@
 #endif
 
 void dump_result(FILE *out_file, dynStr *result) {
-    fprintf(out_file, "%s\n", result->data);
+    fprintf(out_file, "%s\n\n", result->data);
     free_dynStr(result);
 }
 
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
             if (arg_count > 0 || op.op_type == Convert) {
                 result = execute(&scanner, op, result.data, arg, &ok);
                 if (op.op_type == Convert) {
-                    fprintf(out_file, "%s\n", arg);
+                    fprintf(out_file, "%s\n\n", arg);
                     dump_result(out_file, &result);
                     continue;
                 }
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
             arg_count = 0;
         }
 
-        fprintf(out_file, "%s", buffer);
+        fprintf(out_file, "%s\n", buffer);
     }
 
     if (result.data)

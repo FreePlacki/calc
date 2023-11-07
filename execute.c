@@ -205,18 +205,17 @@ dynStr to_dec(short from, char *arg) {
 dynStr exec_convert(scanner *scanner, short base, char *arg) {
     short from = (base >> 4) + 2;
     short to = (base & 0xF) + 2;
-    dbg("%d", from);
 
     dynStr div = to_dec(from, arg);
     dynStr result;
     init_dynStr(&result);
 
     while (true) {
-        char mod[1];
+        char mod[2];
         char to_str[4];
         sprintf(to_str, "%d", to);
         div = exec_div(scanner, 10, div.data, to_str, mod, NULL);
-        append_char(&result, mod[0]);
+        append_char(&result, int_to_char(atoi(mod)));
         if (div.data[0] == '0')
             break;
     }
