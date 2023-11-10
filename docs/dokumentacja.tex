@@ -14,7 +14,7 @@
 \end{minted}
 }
 
-\title{Dokumentacja projektu}
+\title{Dokumentacja Projektu Kalkulator}
 \author{Paweł Bielecki}
 \date{\today}
 
@@ -24,14 +24,104 @@
 
 \section{Założenia projektu}
 
-\begin{minted}[mathescape,
-               linenos,
-               numbersep=5pt]{c}
-int main() {
-    printf("Hello World!");
-}
+% \begin{minted}[mathescape,
+%                linenos,
+%                numbersep=5pt]{c}
+% int main() {
+%     printf("Hello World!");
+% }
+% \end{minted}
+
+Celem projektu jest zaimplementowanie kalkulatora wykonującego działania na dowolnie dużych liczbach, w systemach liczbowych od 2 do 16.
+
+Obsługiwane działania to:
+\begin{itemize}
+    \item dodawanie
+    \item mnożenie
+    \item potęgowanie
+    \item dzielenie całkowitoliczbowe
+    \item dzielenie modulo
+    \item konwersja systemu liczbowego
+\end{itemize}
+
+\subsection{Używanie programu}
+Program wczytuje działania z pliku tekstowego i wypisuje wyniki do innego pliku.
+
+Uruchamiany poprzez:
+\begin{minted}{bash}
+    $ calc.exe <plik wejściowey> [plik wyjściowy]
 \end{minted}
 
+Bez podania pliku wyjściowego program tworzy plik wyjściowy z nazwy pliku wejściowego.
+
+Dodatkowo program można uruchomić bez argumentów aby wejść w tryb interaktywny.
+\begin{minted}{bash}
+   $ calc.exe
+   calc.exe repl
+    Aby zakończyć: ctrl-d (ctrl-z na windowsie)
+
+    [1]> + 10
+    [2]> 15
+    [3]> 20
+    [4]> Wynik: 35
+\end{minted}
+
+W przypadku podania więcej niż 2 argumentów program wypisuje instrukcję używania.
+
+\begin{minted}{bash}
+   $ calc.exe a b c
+   Użycie:
+	calc.exe <ścieżka do pliku wejściowego>
+    [ścieżka do pliku wyjściowego]
+
+    Plik wejściowy musi być w formacie `*.txt`
+    Plik wyjściowy jest opcjonalny
+    (zostanie stworzony na podstawie nazwy pliku
+    wejściowego `out_*.txt`) 
+\end{minted}
+
+\subsection{Obsługiwanie błędów}
+Program wypisuje 3 rodzaje informacji dla użytkownika:
+
+\begin{itemize}
+    \item \textit{info} - informacja pomocnicza, program zadziałał poprawnie
+    \item \textit{warning} - dane działanie wykonało się ale ze skutkiem możliwie niepożądanym
+    \item \textit{error} - działanie nie zostało wykonane - w takim wypadku program wypisuje do pliku wyjściowego jedynie działanie i argumenty i przechodzi do kolejnego działania
+\end{itemize}
+
+Przykłady:
+\begin{minted}{bash}
+    $ calc.exe add.txt 
+    INFO: Nie podano pliku wyjściowego, stworzono `out_add.txt`
+\end{minted}
+
+Jeżeli podamy za mało argumentów:
+\begin{minted}{bash}
+    WARNING [7:1]: Operacja przyjmuje przynajmniej 2 argumenty,
+    otrzymano 1
+	+ 10
+	^
+\end{minted}
+
+W nawiasach kwadratowych mamy numer linii oraz number kolumny w której wystąpił błąd w pliku wejściowym.
+
+\begin{minted}{bash}
+    ERROR [1:4]: Baza może być tylko z przedziału [2, 16]
+	+ 22
+	  ^
+\end{minted}
+
+Obsługiwane błędy:
+\begin{itemize}
+    \item Nie można otworzyć pliku wejściowego
+    \item Nie podano nazwy operacji (plik wejściowy zaczyna się od argumentu)
+    \item Podano zbyt mało argumentów
+    \item Nieoczekiwany znak
+    \item Nieprawidłowy znak w liczbie o bazie x (np 123 nie jest poprawną liczbą w systemie dwójkowym)
+    \item Przekroczona długość argumentu (40 znaków)
+    \item Baza nie jest z przedziału [2, 16]
+    \item Dzielenie przez 0
+\end{itemize}
 
 \section{Narzędzia}
 \section{Ogólny opis rozwiązania}
