@@ -19,7 +19,8 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
         start++;
     }
 
-    while (start[i] != '\0' && start[i] != '\n' && start[i] != ' ') {
+    while (start[i] != '\0' && start[i] != '\n' && start[i] != '\r' &&
+           start[i] != ' ') {
         char c = toupper(start[i++]);
         scanner->idx++;
 
@@ -53,7 +54,7 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
 }
 
 unsigned short parse_base(scanner *scanner, bool *ok) {
-    char base[2];
+    char base[3];
     parse_int(scanner, base, 2, 10, ok);
     unsigned short res = atoi(base);
     if (res < 2 || res > 16) {
