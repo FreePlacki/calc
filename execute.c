@@ -211,7 +211,7 @@ dynStr exec_convert(scanner *scanner, short base, char *arg) {
     init_dynStr(&result);
 
     while (true) {
-        char mod[2];
+        char mod[4];
         char to_str[4];
         sprintf(to_str, "%d", to);
         div = exec_div(scanner, 10, div.data, to_str, mod, NULL);
