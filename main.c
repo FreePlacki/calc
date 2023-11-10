@@ -97,9 +97,9 @@ int main(int argc, char **argv) {
     if (is_repl)
         printf("%s repl\nAby zakończyć: ctrl-d (ctrl-z na windowsie)\n\n",
                argv[0]);
-    repl_prompt(0, is_repl);
 
-    while (fgets(buffer, sizeof(buffer), in_file) != NULL) {
+    while (repl_prompt(line_idx, is_repl),
+           fgets(buffer, sizeof(buffer), in_file) != NULL) {
         line_idx++;
 
         if (buffer[0] == '\n' || buffer[0] == '#') {
@@ -154,7 +154,6 @@ int main(int argc, char **argv) {
                         fprintf(out_file, "%s\n\n", arg);
                     dump_result(out_file, &result, arg_count, expected_args,
                                 op_idx, op_buffer, is_repl, ok);
-                    repl_prompt(line_idx, is_repl);
                     continue;
                 }
             } else {
@@ -177,8 +176,6 @@ int main(int argc, char **argv) {
 
         if (!is_repl)
             fprintf(out_file, "%s\n", buffer);
-
-        repl_prompt(line_idx, is_repl);
     }
 
     if (op_idx != 0)
