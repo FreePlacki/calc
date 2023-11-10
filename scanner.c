@@ -24,8 +24,7 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
         char c = toupper(start[i++]);
         scanner->idx++;
 
-        if (is_unknown_char(c)) {
-            report(scanner, error, "Nieoczekiwany znak `%c`\n", c);
+        if (is_unknown_char(scanner, c)) {
             if (ok)
                 *ok = false;
             return;
@@ -56,12 +55,11 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
 unsigned short parse_base(scanner *scanner, bool *ok) {
     char base[3];
     parse_int(scanner, base, 2, 10, ok);
+    if (!*ok)
+        return 0;
     unsigned short res = atoi(base);
     if (res < 2 || res > 16) {
-        // Jeżeli nie udało się odczytać bazy to nie wypisujmy drugiego błędu
-        if (*ok)
-            report(scanner, error,
-                   "Baza może być tylko z przedziału [2, 16]\n");
+        report(scanner, error, "Baza może być tylko z przedziału [2, 16]\n");
         if (ok)
             *ok = false;
         return res;
@@ -69,14 +67,14 @@ unsigned short parse_base(scanner *scanner, bool *ok) {
     return res;
 }
 
-bool is_argument(char *line) {
+bool is_argument(scanner *scanner, char *line) {
     // traktujemy nieznane znaki jako argument aby potem
     // w parsowaniu wyrzucić błąd
-    if (is_unknown_char(line[0]))
+    if (is_unknown_char(scanner, line[0]))
         return true;
 
     int i = 0;
-    while (line[i] != '\n' && line[i] != '\0') {
+    while (line[i] != '\n' && line[i] != '\r' && line[i] != '\0') {
         if (!is_digit(line[i], 16))
             return false;
         i++;
@@ -102,7 +100,7 @@ void consume_spaces(scanner *scanner) {
 }
 
 void read_arg(scanner *scanner, char *output, unsigned int base, bool *ok) {
-    parse_int(scanner, output, ARG_SIZE, base, ok);
+    parse_int(scanner, output, ARG_SIZE - 1, base, ok);
 }
 
 oper read_instruction(scanner *scanner, bool *ok) {

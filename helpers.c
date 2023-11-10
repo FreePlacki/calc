@@ -54,9 +54,16 @@ bool is_digit(char c, unsigned int base) {
     return ok;
 }
 
-bool is_unknown_char(char c) {
-    return !((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') ||
+bool is_unknown_char(scanner *scanner, char c) {
+    bool unknown =  !((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') ||
              (c == '+' || c == '*' || c == '/' || c == '%' || c == '^'));
+
+    if (unknown) {
+        scanner->idx++;
+        report(scanner, error, "Nieoczekiwany znak `%c`\n", c);
+    }
+
+    return unknown;
 }
 
 void reverse(char *str) {

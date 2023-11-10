@@ -17,7 +17,7 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
                unsigned int base, bool *ok);
 oper read_instruction(scanner *scanner, bool *ok);
 void read_arg(scanner *scanner, char *output, unsigned int base, bool *ok);
-bool is_argument(char *line);
+bool is_argument(scanner *scanner, char *line);
 
 char advance(scanner *scanner);
 void consume(scanner *scanner, char c);

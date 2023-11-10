@@ -141,7 +141,6 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
         trim_leading(&remaining, '0');
 
         int quotient = 0;
-        // dbg("%s", remaining.data);
         while (compare(remaining.data, arg2) >= 0) {
             remaining = exec_sub(base, remaining.data, arg2);
             quotient++;
@@ -152,7 +151,6 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
             trim_leading(&remaining, '0');
         }
 
-        // dbg("%d", quotient);
         char c = int_to_char(quotient);
         append_char(&result, c);
         index++;
@@ -174,9 +172,7 @@ dynStr exec_mod(scanner *scanner, short base, char *arg1, char *arg2,
     exec_div(scanner, base, arg1, arg2, mod, ok);
 
     dynStr result;
-    if (*ok) {
-        dynStr_from(&result, mod);
-    }
+    dynStr_from(&result, mod);
 
     return result;
 }
