@@ -14,7 +14,8 @@
 #endif
 
 void dump_result(FILE *out_file, dynStr *result, int arg_count,
-                 int expected_count, int line_idx, char* op_buffer) {
+                 int expected_count, int line_idx, char *op_buffer,
+                 bool is_repl) {
     if (arg_count < expected_count) {
         scanner scanner;
         scanner.line_idx = line_idx;
@@ -28,37 +29,55 @@ void dump_result(FILE *out_file, dynStr *result, int arg_count,
     }
 
     if (result->data) {
+        if (is_repl) {
+            printf("Wynik: ");
+        }
         fprintf(out_file, "%s\n\n", result->data);
     }
     free_dynStr(result);
+}
+
+void repl_prompt(int line_idx, bool is_repl) {
+    if (is_repl)
+        printf("[%d]> ", line_idx + 1);
 }
 
 int main(int argc, char **argv) {
 #ifdef _WIN32
     SetConsoleOutputCP(65001); // poprawne kodowanie na windowsie
 #endif
-    if (argc == 1 || argc > 3) {
+
+    if (argc > 3) {
         print_help(argv[0]);
         exit(1);
     }
 
-    FILE *in_file = fopen(argv[1], "r");
-    if (in_file == NULL) {
-        fprintf(stderr, "Nie można otworzyć pliku `%s`\n", argv[1]);
-        exit(1);
-    }
-
-    char *out_name;
-    if (argc == 3) {
-        out_name = argv[2];
+    FILE *in_file;
+    FILE *out_file;
+    bool is_repl = false;
+    if (argc == 1) {
+        in_file = stdin;
+        out_file = stdout;
+        is_repl = true;
     } else {
-        char o_name[100] = "out_";
-        out_name = strcat(o_name, extract_name(argv[1]));
-        out_name = strcat(out_name, ".txt");
-        report(NULL, info, "Nie podano pliku wyjściowego, stworzono `%s`\n",
-               out_name);
+        in_file = fopen(argv[1], "r");
+        if (in_file == NULL) {
+            fprintf(stderr, "Nie można otworzyć pliku `%s`\n", argv[1]);
+            exit(1);
+        }
+
+        char *out_name;
+        if (argc == 3) {
+            out_name = argv[2];
+        } else {
+            char o_name[100] = "out_";
+            out_name = strcat(o_name, extract_name(argv[1]));
+            out_name = strcat(out_name, ".txt");
+            report(NULL, info, "Nie podano pliku wyjściowego, stworzono `%s`\n",
+                   out_name);
+        }
+        out_file = fopen(out_name, "w");
     }
-    FILE *out_file = fopen(out_name, "w");
 
     dynStr result;
 
@@ -70,6 +89,11 @@ int main(int argc, char **argv) {
     int op_idx = 0;
     int arg_count = 0;
     int expected_args = 2;
+
+    if (is_repl)
+        printf("%s repl\nAby zakończyć: ctrl-d (ctrl-z na windowsie)\n\n",
+               argv[0]);
+    repl_prompt(0, is_repl);
 
     while (fgets(buffer, sizeof(buffer), in_file) != NULL) {
         line_idx++;
@@ -99,6 +123,11 @@ int main(int argc, char **argv) {
         char arg[ARG_SIZE];
 
         if (is_argument(buffer)) {
+            if (op_idx == 0) {
+                report(&scanner, error, "Nie podano nazwy operacji\n");
+                ok = false;
+                continue;
+            }
             int base = op.op_type == Convert ? (op.base >> 4) + 2 : op.base;
             read_arg(&scanner, arg, base, &ok);
             arg_count++;
@@ -106,16 +135,20 @@ int main(int argc, char **argv) {
             if (arg_count >= expected_args) {
                 result = execute(&scanner, op, result.data, arg, &ok);
                 if (op.op_type == Convert) {
-                    fprintf(out_file, "%s\n\n", arg);
-                    dump_result(out_file, &result, arg_count, expected_args, op_idx, op_buffer);
+                    if (!is_repl)
+                        fprintf(out_file, "%s\n\n", arg);
+                    dump_result(out_file, &result, arg_count, expected_args,
+                                op_idx, op_buffer, is_repl);
+                    repl_prompt(line_idx, is_repl);
                     continue;
                 }
             } else {
                 dynStr_from(&result, arg);
             }
         } else {
-            if (line_idx != 1)
-                dump_result(out_file, &result, arg_count, expected_args, op_idx, op_buffer);
+            if (op_idx != 0 && line_idx != 1)
+                dump_result(out_file, &result, arg_count, expected_args, op_idx,
+                            op_buffer, is_repl);
 
             op = read_instruction(&scanner, &ok);
             expected_args = op.op_type == Convert ? 1 : 2;
@@ -124,10 +157,14 @@ int main(int argc, char **argv) {
             op_idx = line_idx;
         }
 
-        fprintf(out_file, "%s\n", buffer);
+        if (!is_repl)
+            fprintf(out_file, "%s\n", buffer);
+
+        repl_prompt(line_idx, is_repl);
     }
 
-    dump_result(out_file, &result, arg_count, expected_args, op_idx, op_buffer);
+    dump_result(out_file, &result, arg_count, expected_args, op_idx, op_buffer,
+                is_repl);
 
     fclose(in_file);
     fclose(out_file);
