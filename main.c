@@ -130,10 +130,16 @@ int main(int argc, char **argv) {
             }
             int base = op.op_type == Convert ? (op.base >> 4) + 2 : op.base;
             read_arg(&scanner, arg, base, &ok);
+            if (!ok)
+                continue;
+
             arg_count++;
 
             if (arg_count >= expected_args) {
                 result = execute(&scanner, op, result.data, arg, &ok);
+                if (!ok)
+                    continue;
+
                 if (op.op_type == Convert) {
                     if (!is_repl)
                         fprintf(out_file, "%s\n\n", arg);
@@ -151,6 +157,9 @@ int main(int argc, char **argv) {
                             op_buffer, is_repl);
 
             op = read_instruction(&scanner, &ok);
+            if (!ok)
+                continue;
+
             expected_args = op.op_type == Convert ? 1 : 2;
             arg_count = 0;
             strcpy(op_buffer, buffer);
