@@ -21,6 +21,7 @@ void dump_result(FILE *out_file, dynStr *result, int arg_count,
         return;
     }
     if (arg_count < expected_count) {
+        // towrzymy scanner z nagłówkiem błędnej operacji
         scanner scanner;
         scanner.line_idx = line_idx;
         scanner.line = op_buffer;
@@ -91,7 +92,7 @@ int main(int argc, char **argv) {
 
     // do raportowania błędów
     char op_buffer[LINE_SIZE];
-    int op_idx = 0;
+    int last_op_idx = 0;
     int arg_count = 0;
     int expected_args = 2;
 
@@ -133,16 +134,18 @@ int main(int argc, char **argv) {
             if (!ok)
                 continue;
 
-            if (op_idx == 0) {
+            if (last_op_idx == 0) {
                 report(&scanner, error, "Nie podano nazwy operacji\n");
                 ok = false;
                 continue;
             }
 
             int base = op.op_type == Con ? (op.base >> 4) + 2 : op.base;
+
             char arg[ARG_SIZE];
             read_arg(&scanner, arg, base, &ok);
             arg_count++;
+
             if (!ok)
                 continue;
 
@@ -155,16 +158,16 @@ int main(int argc, char **argv) {
                     if (!is_repl)
                         fprintf(out_file, "%s\n\n", arg);
                     dump_result(out_file, &result, arg_count, expected_args,
-                                op_idx, op_buffer, is_repl, ok);
+                                last_op_idx, op_buffer, is_repl, ok);
                     continue;
                 }
             } else {
                 dynStr_from(&result, arg);
             }
         } else {
-            if (op_idx != 0 && line_idx != 1)
-                dump_result(out_file, &result, arg_count, expected_args, op_idx,
-                            op_buffer, is_repl, ok);
+            if (last_op_idx != 0 && line_idx != 1)
+                dump_result(out_file, &result, arg_count, expected_args,
+                            last_op_idx, op_buffer, is_repl, ok);
 
             op = read_instruction(&scanner, &ok);
             if (!ok)
@@ -173,15 +176,15 @@ int main(int argc, char **argv) {
             expected_args = op.op_type == Con ? 1 : 2;
             arg_count = 0;
             strcpy(op_buffer, buffer);
-            op_idx = line_idx;
+            last_op_idx = line_idx;
         }
 
         if (!is_repl)
             fprintf(out_file, "%s\n", buffer);
     }
 
-    dump_result(out_file, &result, arg_count, expected_args, op_idx, op_buffer,
-                is_repl, ok);
+    dump_result(out_file, &result, arg_count, expected_args, last_op_idx,
+                op_buffer, is_repl, ok);
 
     fclose(in_file);
     fclose(out_file);

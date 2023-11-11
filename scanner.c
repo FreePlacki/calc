@@ -57,6 +57,7 @@ unsigned short parse_base(scanner *scanner, bool *ok) {
     parse_int(scanner, base, 2, 10, ok);
     if (!*ok)
         return 0;
+
     unsigned short res = atoi(base);
     if (res < 2 || res > 16) {
         report(scanner, error, "Baza może być tylko z przedziału [2, 16]\n");

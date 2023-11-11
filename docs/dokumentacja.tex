@@ -29,6 +29,7 @@
 
 Celem projektu jest zaimplementowanie kalkulatora wykonującego działania na dowolnie dużych liczbach, w systemach liczbowych od 2 do 16.
 
+
 Obsługiwane działania to:
 \begin{itemize}
     \item dodawanie
@@ -49,7 +50,7 @@ Uruchamiany poprzez:
 
 Bez podania pliku wyjściowego program tworzy plik wyjściowy z nazwy pliku wejściowego.
 
-Dodatkowo program można uruchomić bez argumentów aby wejść w tryb interaktywny.
+Dodatkowo program można uruchomić bez argumentów, aby wejść w tryb interaktywny.
 \begin{minted}{bash}
    $ calc.exe
    calc.exe repl
@@ -61,7 +62,7 @@ Dodatkowo program można uruchomić bez argumentów aby wejść w tryb interakty
     [4]> Wynik: 35
 \end{minted}
 
-W przypadku podania więcej niż 2 argumentów program wypisuje instrukcję używania.
+W przypadku podania więcej, niż 2 argumentów program wypisuje instrukcję używania.
 
 \begin{minted}[breaklines]{bash}
    $ calc.exe a b c
@@ -77,8 +78,8 @@ Program wypisuje 3 rodzaje informacji dla użytkownika:
 
 \begin{itemize}
     \item \textit{info} - informacja pomocnicza, program zadziałał poprawnie
-    \item \textit{warning} - dane działanie wykonało się ale ze skutkiem możliwie niepożądanym
-    \item \textit{error} - działanie nie zostało wykonane - w takim wypadku program wypisuje do pliku wyjściowego jedynie działanie i argumenty i przechodzi do kolejnego działania
+    \item \textit{warning} - dane działanie wykonało się, ale ze skutkiem możliwie niepożądanym
+    \item \textit{error} - działanie nie zostało wykonane - w takim wypadku program wypisuje do pliku wyjściowego jedynie działanie i argumenty, i przechodzi do kolejnego działania
 \end{itemize}
 
 Przykłady:
@@ -94,7 +95,7 @@ Jeżeli podamy za mało argumentów:
 	^
 \end{minted}
 
-W nawiasach kwadratowych mamy numer linii oraz number kolumny w której wystąpił błąd w pliku wejściowym.
+W nawiasach kwadratowych mamy numer linii oraz number kolumny, w której wystąpił błąd w pliku wejściowym.
 
 \begin{minted}{bash}
     ERROR [1:4]: Baza może być tylko z przedziału [2, 16]
@@ -108,7 +109,7 @@ Obsługiwane błędy:
     \item Nie podano nazwy operacji (plik wejściowy zaczyna się od argumentu)
     \item Podano zbyt mało argumentów
     \item Nieoczekiwany znak
-    \item Nieprawidłowy znak w liczbie o bazie x (np 123 nie jest poprawną liczbą w systemie dwójkowym)
+    \item Nieprawidłowy znak w liczbie o bazie x (np. 123 nie jest poprawną liczbą w systemie dwójkowym)
     \item Przekroczona długość argumentu (40 znaków)
     \item Baza nie jest z przedziału [2, 16]
     \item Dzielenie przez 0
@@ -149,7 +150,7 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
                unsigned short base, bool *ok);
 oper read_instruction(scanner *scanner, bool *ok);
 void read_arg(scanner *scanner, char *output, unsigned short base, bool *ok);
-bool is_argument(scanner *scanner, char *line);
+bool is_argument(scanner *scanner, char *line, bool *ok);
 
 char advance(scanner *scanner);
 void consume(scanner *scanner, char c);
@@ -160,7 +161,7 @@ Scanner będzie przechodził po danej linii znak po znaku i próbował ją zinte
 
 Sam scanner jest structem zawierającym daną linię pliku wejściowego oraz jej numer i swoją pozycję (wskazującą na następny znak do przeczytania).
 
-Dwie najważniejsze funkcje to \mintinline{c}{read_arg}, która zczytuje argument i zapisuje go w podanym argumencie \mintinline{c}{char *output} oraz \mintinline{c}{read_instruction}, która zwraca struct \mintinline{c}{oper} reprezentujący typ operacji oraz jej bazę.
+Dwie najważniejsze funkcje to \mintinline{c}{read_arg}, która sczytuje argument i zapisuje go w podanym argumencie \mintinline{c}{char *output} oraz \mintinline{c}{read_instruction}, która zwraca struct \mintinline{c}{oper} reprezentujący typ operacji oraz jej bazę.
 
 \pagebreak
 \begin{minted}[mathescape,
@@ -267,7 +268,7 @@ typedef enum {
 void report(scanner *scanner, er_type t, char *msg, ...);
 \end{minted}
 
-Program ma początek oczywiście w \mintinline{c}{main.c} gdzie zczytujemy od użytkownika nazwy plików i w pętli czytamy kolejne linie wejścia i wypisujemy rezulataty.
+Program ma początek oczywiście w \mintinline{c}{main.c} gdzie sczytujemy od użytkownika nazwy plików i w pętli czytamy kolejne linie wejścia i wypisujemy rezultaty.
 
 Zatem podsumowując, ogólna struktura kodu:\\
 \mintinline{c}{main}: pobiera input, przechodzi przez każdą linię $\rightarrow$ \mintinline{c}{scanner}: przechodzi przez każdy znak linii $\rightarrow$ \mintinline{c}{execute}: wykonuje działania $\rightarrow$ \mintinline{c}{main}: wypisuje output.
@@ -275,6 +276,7 @@ Zatem podsumowując, ogólna struktura kodu:\\
 \section{Szczegóły}
 
 \subsection{Parsowanie argumentów programu}
+
 Tak jak było powiedziane w pierwszej części, porgram może przyjąć 0, 1 lub 2 argumenty, zatem dla większej ilości chcemy wypisać tekst pomocniczy.
 
 \begin{minted}[mathescape,
@@ -290,7 +292,7 @@ if (argc > 3) {
 
 Warto zaznaczyć, że \mintinline{c}{argv[0]} to zawsze nazwa programu, stąd sprawdzamy \mintinline{c}{argc > 3}.
 
-Jeżeli nie podano żadnego argumentu plik wejściowy i wyjściowy to odpowiednio standardowe wejście i wyjście.
+Jeżeli nie podano żadnego argumentu plik wejściowy i wyjściowy, to odpowiednio standardowe wejście i wyjście.
 \begin{minted}[mathescape,
                linenos,
                numbersep=5pt, breaklines]{c}
@@ -373,7 +375,7 @@ const char *extract_name(const char *path) {
 }
 \end{minted}
 
-Najpierw odcinamy od ostatniego '/' (na windowsie `\textbackslash`) potem do ostatniej '.' aby dostać nazwę pliku.
+Najpierw odcinamy od ostatniego '/' (na windowsie `\textbackslash`) potem do ostatniej '.', aby dostać nazwę pliku.
 
 
 \subsection{Czytanie wejścia}
@@ -397,7 +399,7 @@ int arg_count = 0;
 int expected_args = 2;
 \end{minted}
 
-4 ostatnie nie są niezbędne do funkcjonowania programu, lecz dają cenne informacje do bardziej precyzyjnego raportowania błędów. Będzie to często powtarzający się scenariusz - dla lepszych błędów musimy poświęcić nieco prostoty kodu (np. funkcje będą musały przyjmować 1-2 argumenty więcej aby dostać informacje do raportowania błędów). Mimo to uważam, że dobre błędy są warte lekkiego pogorszenia prostoty implementacji (np. pomocne wiadomości o błędzie / warningi są dla mnie największą zaletą danego kompilatora).\\
+4 ostatnie nie są niezbędne do funkcjonowania programu, lecz dają cenne informacje do bardziej precyzyjnego raportowania błędów. Będzie to często powtarzający się scenariusz - dla lepszych błędów musimy poświęcić nieco prostoty kodu (np. funkcje będą musiały przyjmować 1-2 argumenty więcej, aby dostać informacje do raportowania błędów). Mimo to uważam, że dobre błędy są warte lekkiego pogorszenia prostoty implementacji (np. pomocne wiadomości o błędzie / warningi są dla mnie największą zaletą danego kompilatora).\\
 
 Przed pętlą wypisujemy jeszcze wiadomość dla trybu interaktywnego.
 \begin{minted}[mathescape,
@@ -415,7 +417,7 @@ while (repl_prompt(line_idx, is_repl),
 }
 \end{minted}
 
-Pętla wykonuje się dopóki \mintinline{c}{fgets} nie zwróci \mintinline{c}{NULL} (w przypadku błędu lub końca pliku). Przed każdą iteracją wypisujemy również prostego prompta jeżeli jesteśmy w repl:
+Pętla wykonuje się, dopóki \mintinline{c}{fgets} nie zwróci \mintinline{c}{NULL} (w przypadku błędu lub końca pliku). Przed każdą iteracją wypisujemy również prostego prompta, jeżeli jesteśmy w repl:
 \begin{minted}[mathescape,
                linenos,
                numbersep=5pt, breaklines]{c}
@@ -443,7 +445,7 @@ for (int i = 0; buffer[i]; i++) {
 }
 \end{minted}
 
-Przy okacji zamieniamy wszystkie znaki na wielkie litery (aby nie odróżniać potem \mintinline{c}{'A'} od \mintinline{c}{'a'} w liczbach).
+Przy okazji zamieniamy wszystkie znaki na wielkie litery (aby nie odróżniać potem \mintinline{c}{'A'} od \mintinline{c}{'a'} w liczbach).
 
 Następnie inicjujemy scanner.
 
@@ -458,29 +460,600 @@ scanner.line_idx = line_idx;
 scanner.line = buffer;
 \end{minted}
 
-Następnie będziemy potrzebowali dowiedzieć się czy linia którą właśnie zczytaliśmy jest argumentem (pojedynczą liczbą) czy nazwą operacji (czymś formatu [znak] [liczba] lub [liczba] [liczba]).
+Następnie będziemy potrzebowali dowiedzieć się, czy linia, którą właśnie zczytaliśmy jest argumentem (pojedynczą liczbą) czy nazwą operacji (czymś formatu [znak] [liczba] lub [liczba] [liczba]).
 \begin{minted}[mathescape,
                linenos,
                numbersep=5pt, breaklines]{c}
 // scanner.c
 
-bool is_argument(scanner *scanner, char *line) {
-    // traktujemy nieznane znaki jako argument.
-    // za obsługę błędów będzie odpowiedzialny użytkownik funkcji
-
-    if (is_unknown_char(scanner, line[0]))
-        return true;
-
+bool is_argument(scanner *scanner, char *line, bool *ok) {
     int i = 0;
     while (line[i] != '\n' && line[i] != '\r' && line[i] != '\0') {
+        // traktujemy nieznane znaki jako argument.
+        // za obsługę błędów będzie odpowiedzialny urzystkownik funkcji
+        if (is_unknown_char(scanner, line[i])) {
+            if (ok)
+                *ok = false;
+            return true;
+        }
+
         if (!is_digit(line[i], 16))
             return false;
+
         i++;
     }
 
     return true;
 }
 \end{minted}
+
+Zauważmy, że funkcja ta przyjmuje jako argument \mintinline{c}{bool *ok}. Jest to flaga, która zostaje ustawiona na \mintinline{c}{false} jeżeli w którymś momencie wystąpi błąd. Flaga \mintinline{c}{ok} będzie pojawiać się jeszcze w wielu miejscach.\\
+
+Jej wartość jest sprawdzana w każdej iteracji pętli:
+\pagebreak
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+if (!ok) {
+    ok = true;
+    if (arg_count >= expected_args)
+        dump_result(out_file, &result, arg_count, expected_args,
+                    line_idx, op_buffer, is_repl, ok);
+    // jeżeli nie zaczyna się jeszcze nowe działanie lub przy
+    // parsowaniu wystąpił błąd to nadal pomijamy tą linię
+    if (is_argument(&scanner, buffer, &ok) || !ok) {
+        ok = false;
+        continue;
+    }
+}
+\end{minted}
+
+Jeżeli napotkaliśmy błąd to pomijamy wszystkie linie aż napotkamy nazwę następnej operacji, wtedy resetujemy stan programu (u nas tylko \mintinline{c}{ok = true;}) i możemy parsować dalej zapominając o wcześniejszych błędach.
+
+W języku parserów nasza flaga ma reprezentować tak zwany \textit{panic-mode} a powyższy \mintinline{c}{if} to \textit{synchronizacja} z jedyną różnicą, że kompilator, który raz już wszedł w panic-mode nie będzie próbował dalej kompilować programu (z oczywistych powodów), może jednak nadal parsować kod, aby wykryć dla użytkownika ewentualne pozostałe błędy składniowe. My natomiast staramy się wykonać późniejsze działania, gdyż istnieją one niezależnie od pozostałych.
+
+\pagebreak
+Jeżeli zdecydujemy że dana linia jest nazwą działania:
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+if (is_argument(&scanner, buffer, &ok)) {
+    ...
+} else {
+        if (last_op_idx != 0 && line_idx != 1)
+            dump_result(out_file, &result, arg_count, expected_args, last_op_idx, op_buffer, is_repl, ok);
+
+    op = read_instruction(&scanner, &ok);
+    if (!ok)
+        continue;
+
+    expected_args = op.op_type == Con ? 1 : 2;
+    arg_count = 0;
+    strcpy(op_buffer, buffer);
+    last_op_idx = line_idx;
+}
+\end{minted}
+
+Po pierwsze, jeżeli nie jest to pierwsza operacja to printujemy rezultat poprzedniej (funkcja \mintinline{c}{dump_result}, która wypisuje rezultat sprawdzając czy operacja dostała wystarczającą ilość argumentów). Następnie sczytujemy operację jako \mintinline{c}{struct oper} zawierający typ opracji i jej bazę. Na koniec updatujemy potrzebne zmienne, m.in. \mintinline{c}{expected_args} mając na uwadze, że operacja \mintinline{c}{Con} (Convert) oczekuje tylko 1 argument.
+
+\pagebreak
+
+Jeżeli zdecydujemy że linia jest argumentem działania:
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+if (is_argument(&scanner, buffer, &ok)) {
+    if (!ok)
+        continue;
+
+    if (last_op_idx == 0) {
+        report(&scanner, error, "Nie podano nazwy operacji\n");
+        ok = false;
+        continue;
+    }
+    ...
+}
+\end{minted}
+
+Sama funkcja \mintinline{c}{is_argument} może napotkać błąd, jeżeli tak się stanie - \mintinline{c}{continue;}. Musimy również sprawdzić, czy nasz argument występuje już po jakiejś operacji (czyli czy \mintinline{c}{last_op_idx != 0}). Idąc dalej:
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+if (is_argument(&scanner, buffer, &ok)) {
+    ...
+
+    int base = op.op_type == Con ? (op.base >> 4) + 2 : op.base;
+
+    char arg[ARG_SIZE];
+    read_arg(&scanner, arg, base, &ok);
+    arg_count++;
+
+    if (!ok)
+        continue;
+}
+\end{minted}
+
+Funkcja \mintinline{c}{read_arg} potrzebuje znać bazę argumentu, aby go odczytać, znajduje się ona w \mintinline{c}{op.base} ale, jako że operacja konwersji systemów operuje na dwóch bazach jednocześnie musiałem zapisać je razem do jednej zmiennej, uprzednio shiftując jedną z nich i odejmując 2 (aby nie były równe 16, co zajęłoby 5 bitów). Nie jestem w pełni zadowolony z tego rozwiązania, ale wynika ono z tego, że jedynie jedna operacja posiada odmienną strukturę ([liczba liczba] zamiast [znak] [liczba]). Gdyby było więcej działań, które również mają inną strukturę, pewnie zdecydowałbym się na inne rozwiązanie.\\
+
+Idąc dalej:
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+if (is_argument(&scanner, buffer, &ok)) {
+    ...
+
+    if (arg_count >= expected_args) {
+        result = execute(&scanner, op, result.data, arg, &ok);
+        if (!ok)
+            continue;
+    
+        if (op.op_type == Con) {
+            if (!is_repl)
+                fprintf(out_file, "%s\n\n", arg);
+            dump_result(out_file, &result, arg_count, expected_args, last_op_idx, op_buffer, is_repl, ok);
+            continue;
+        }
+    } else {
+        dynStr_from(&result, arg);
+    }
+}
+\end{minted}
+
+Jeżeli mamy już wystarczająco argumentów (przynajmniej 2 lub przynajmniej 1 dla konwersji) to wykonujemy działanie - funkcja \mintinline{c}{execute} zwraca wynik typu \mintinline{c}{dynStr} (więcej w kolejnej sekcji). W przeciwnym razie zapisujemy argument w zmiennej przechowującej rezultat - \mintinline{c}{dynStr_from(&result, arg);}.
+
+\pagebreak
+
+\subsection{Scanner}
+
+Zacznijmy od parsowania nagłówka operacji.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// scanner.c
+
+oper read_instruction(scanner *scanner, bool *ok) {
+    oper op;
+    op.op_type = Add;
+    op.base = 0;
+    char c = advance(scanner);
+
+    if (is_digit(c, 10)) {
+        scanner->idx--;
+
+        unsigned short base1 = parse_base(scanner, ok);
+        if (!(*ok))
+            return op;
+
+        consume_spaces(scanner);
+
+        unsigned short base2 = parse_base(scanner, ok);
+        if (!(*ok))
+            return op;
+
+        op.base = ((base1 - 2) << 4) | (base2 - 2);
+        op.op_type = Con;
+        return op;
+    }
+    ...
+}
+\end{minted}
+
+Funkcja \mintinline{c}{advance} zwraca aktualnie czytany znak i zwiększa wskaźnik scannera. Następnie sprawdzamy czy znak ten jest liczbą (wtedy mamy doczynienia z nagłówkiem operacji zamiany bazy). Parsujemy wtedy pierwszą bazę, konsumujemy dowolną ilość spacji (czyli [liczba]      [liczba] również będzie poprawne) i parsujemy drugą bazę. Następnie shiftujemy pierwszą w lewo o 4 i dodajemy obie do \mintinline{c}{op.base}.
+
+\pagebreak
+Funkcja \mintinline{c}{parse_base} opiera się głównie na \mintinline{c}{parse_int} (opisane później). Sprawdza również czy liczba jest z odpowiedniego przedziału.
+
+Idąc dalej, jeżeli wiemy, że nie mamy doczynienia z zamianą bazy, wystarczy jedynie sczytać bazę:
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// scanner.c
+               
+oper read_instruction(scanner *scanner, bool *ok) {
+    ...
+    consume_spaces(scanner);
+    
+    op.base = parse_base(scanner, ok);
+    if (!(*ok))
+        return op;
+    
+    consume(scanner, '\n');
+}
+\end{minted}
+
+I zamienić znak działania na odpowiedni enum.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// scanner.c
+
+oper read_instruction(scanner *scanner, bool *ok) {
+    ...
+    switch (c) {
+    case '+':
+        op.op_type = Add;
+        break;
+    case '*':
+        op.op_type = Mul;
+        break;
+    case '^':
+        op.op_type = Pow;
+        break;
+    case '/':
+        op.op_type = Div;
+        break;
+    case '%':
+        op.op_type = Mod;
+        break;
+    default:
+        report(scanner, error, "Nieoczekiwany znak `%c`\n", c);
+        if (ok)
+            *ok = false;
+    }
+
+    return op;
+}
+\end{minted}
+
+
+Parsowanie opiera się na funkcji \mintinline{c}{parse_int}.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// scanner.c
+
+void parse_int(scanner *scanner, char *output, unsigned int len, unsigned short base, bool *ok) {
+    char *start = scanner->line + scanner->idx;
+    unsigned int i = 0;
+
+    // ucinamy 0 poprzedzające liczbę (np. 002 -> 2, 00 -> 0)
+    while (start[0] == '0' && start[2] != '\0') {
+        start++;
+    }
+    ...
+}
+\end{minted}
+
+Najpierw ustawiamy pointer na początek liczby i następnie ucinamy poprzedzające zera. Następnie kopiujemy do outputu kolejne znaki dopóki nie napotkamy na koniec linii.
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// scanner.c
+
+void parse_int(scanner *scanner, char *output, unsigned int len, unsigned short base, bool *ok) {
+    ...
+    while (start[i] != '\0' && start[i] != '\n' && start[i] != '\r' && start[i] != ' ') {
+        char c = toupper(start[i++]);
+        advance(scanner);
+        ... // sprawdzanie błędów
+
+        output[i - 1] = c;
+    }
+
+    output[i] = '\0';
+}
+\end{minted}
+
+Funkcja do czytania argumentu korzysta po prostu z \mintinline{c}{parse_int}.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// scanner.c
+
+void read_arg(scanner *scanner, char *output, unsigned short base, bool *ok) {
+    parse_int(scanner, output, ARG_SIZE - 1, base, ok);
+}
+\end{minted}
+
+
+
+
+\subsection{Dynamiczna alokacja}
+
+Wyniki działań mogą mieć (w przeciwieństwie do argumentów) dowolną długość, zatem niezbędne jest alokowanie ich dynamicznie.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// helpers.h
+
+typedef struct {
+    char *data;
+    size_t size;
+    size_t capacity;
+} dynStr;
+
+void init_dynStr(dynStr *str);
+void dynStr_from(dynStr *str, char *s);
+void append_char(dynStr *str, char c);
+void free_dynStr(dynStr *str);
+\end{minted}
+
+\pagebreak
+Inicjujemy z \mintinline{c}{capacity = 8}.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// helpers.c
+
+void init_dynStr(dynStr *str) {
+    str->size = 0;
+    str->capacity = 8;
+    str->data = (char *)malloc(sizeof(char) * str->capacity);
+    str->data[0] = '\0';
+}
+\end{minted}
+
+Przy dodawaniu sprawdzamy czy przekorczyliśmy aktualne \mintinline{c}{capacity}, jeżeli tak to musimy przealokować pamięć. Wybieramy wtedy dwukrotnie większą pojemność.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// helpers.c
+
+void append_char(dynStr *str, char c) {
+    if (str->size + 1 >= str->capacity) {
+        str->capacity *= 2;
+        str->data = (char *)realloc(str->data, str->capacity);
+    }
+
+    str->data[str->size++] = c;
+    str->data[str->size] = '\0';
+}
+\end{minted}
+
+
+\subsection{Wykonywanie operacji}
+
+Wykonywaniem operacji zajmuje się \mintinline{c}{execute.c}. Funkcja \mintinline{c}{dynStr execute(...)} rozdziela zadanie wykonania operacji do osobnych funkcji ze względu na rodziaj działania.
+
+\subsubsection{Dodawanie}
+Jako algorytm dodawania będziemy wykorzystywać zwykłe dodawanie pisemne
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_add(short base, char *arg1, char *arg2) {
+    ...
+    for (i = n1 - 1, j = n2 - 1; i >= 0 || j >= 0; i--, j--) {
+        // Możemy dać NULL za ok, bo sprawdziliśmy już błędny input
+        int digit1 = (i >= 0) ? char_to_dec(arg1[i], base, NULL) : 0;
+        int digit2 = (j >= 0) ? char_to_dec(arg2[j], base, NULL) : 0;
+        int sum = digit1 + digit2 + carry;
+
+        char c = int_to_char(sum % base);
+        append_char(&result, c);
+
+        carry = sum / base;
+    }
+
+    if (carry) {
+        char c = int_to_char(carry);
+        append_char(&result, c);
+    }
+
+    reverse(result.data);
+    return result;
+}
+\end{minted}
+
+Iterujemy liczby od końca (uzupełniając zerami w miarę potrzeby) i dodajemy odpowiednie cyfry z uwzględnieniem przeniesienia.
+
+\pagebreak
+Zauważmy, że po takiej operacji musimy jeszcze odwrócić rezultat.
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// helpers.c
+
+void reverse(char *str) {
+    int length = strlen(str);
+    for (int i = 0, j = length - 1; i < j; i++, j--) {
+        char temp = str[i];
+        str[i] = str[j];
+        str[j] = temp;
+    }
+}
+\end{minted}
+
+Być może dało by się uniknąć odwracania ale nie ma to większego znaczenia gdyż złożoność nadal będzie rzędu $O(n)$ gdzie $n$ to długość dłuższej liczby i będzie znacznie szybszy niż mnożenie czy potęgowanie.\\
+
+W dodawaniu wykorzystujemy również funkcje \mintinline{c}{char_to_dec} oraz \mintinline{c}{int_to_char} aby zamienić pojedyncze znaki na dany system liczbowy (poniżej \mintinline{c}{int_to_char}, \mintinline{c}{char_to_dec} działa analogicznie).
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// helpers.c
+
+char int_to_char(int v) {
+    assert(v >= 0 && v <= 15);
+
+    if (v >= 0 && v <= 9) {
+        return '0' + v;
+    }
+    return 'A' + v - 10;
+}
+\end{minted}
+
+Obie funkcje wykorzystują dodawanie/odejmowanie znaków aby uzyskać odpowiednio znak reprezentujący liczbę w danym systemie lub z jakiegoś systemu zamienić na liczbę dziesiętną.
+
+
+\subsubsection{Odejmowanie}
+Działanie odejmowania nie było w liście działań do zaimplementowania ale będzie ono niezbędne do późniejszego dzielenia.
+
+Algorytm jest bardzo podobny do dodawania, z zasadniczą różnicą, że możemy odejmować jedynie liczbę mniejszą od większej:
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_sub(short base, char *arg1, char *arg2) {
+    ...
+    if (n1 < n2) {
+        append_char(&result, '0');
+        return result;
+    }
+    ...
+}
+\end{minted}
+
+\subsubsection{Mnożenie}
+Algorytm mnożenia będzie nieco bardziej skomplikowany ale nadal jest to po prostu dzielenie pisemne (tylko krok dodawania będziemy wykonywać na bierząco zamiast przechowywać wyniki i dodawać pod koniec jak robi się to na kartce).
+
+Zaczynamy od wypełnienia rezultatu $n1 + n2$ zerami (gdzie $n1$ i $n2$ to długości argumentów) gdyż jest to maksymalna możliwa wielkość wyniku (nadmiarowe zera utniemy pod koniec).
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_mul(short base, char *arg1, char *arg2) {
+    int n1 = strlen(arg1), n2 = strlen(arg2);
+
+    dynStr result;
+    init_dynStr(&result);
+    for (int i = 0; i < n1 + n2; i++) {
+        append_char(&result, '0');
+    }
+    ...
+}
+\end{minted}
+
+\pagebreak
+Następnie dla każdej cyfry pierwszej liczby rozważamy każdą drugiej (wszystko zaczynając od najmniej znaczącej pozycji):
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_mul(short base, char *arg1, char *arg2) {
+    ...
+    for (int i = n1 - 1; i >= 0; i--) {
+        int carry = 0;
+        int digit1 = char_to_dec(arg1[i], base, NULL);
+
+        for (int j = n2 - 1; j >= 0; j--) {
+            int digit2 = char_to_dec(arg2[j], base, NULL);
+            ...
+        }
+    ...
+}
+\end{minted}
+
+
+Wykonujemy mnożenie danych cyfr z uwzględnieniem przeniesienia oraz dodajemy do wyniku odpowiednią cyfrę z rezultatu (dlatego musieliśmy uprzednio wypełnić go zerami).
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_mul(short base, char *arg1, char *arg2) {
+    ...
+        for (int j = n2 - 1; j >= 0; j--) {
+            ...
+            int product =
+                digit1 * digit2 + carry +
+                char_to_dec(result.data[n1 + n2 - (i + j) - 2], base, NULL);
+        }
+    ...
+}
+\end{minted}
+
+Dalej (podobnie jak w dodawaniu) liczymy przeniesienie, odwracamy rezultat oraz usuwamy nadmiarowe zera.
+
+
+\subsubsection{Dzielenie}
+
+Do dzielenia przyda się nam prosta funkcja \mintinline{c}{compare}, która będzie zwracać wartość $> 0$ gdy pierwszy argument będzie większy od drugiego.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+int compare(char *arg1, char *arg2) {
+    int len1 = strlen(arg1);
+    int len2 = strlen(arg2);
+
+    if (len1 > len2) {
+        return 1;
+    } else if (len1 < len2) {
+        return -1;
+    }
+    return strcmp(arg1, arg2);
+}
+\end{minted}
+
+
+Będziemy dodawać kolejne cyfry z argumentu do \mintinline{c}{remaining} i porównywać go z dzielnikiem. Jeżeli będzie większy to wykonujemy sekwencję odejmowań aż będzie mniejszy od dzielnika.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *mod, bool *ok) {
+    ...
+    while (arg1[i] != '\0') {
+        append_char(&remaining, arg1[i]);
+        trim_leading(&remaining, '0');
+
+        int quotient = 0;
+        while (compare(remaining.data, arg2) >= 0) {
+            remaining = exec_sub(base, remaining.data, arg2);
+            quotient++;
+        }
+        ...
+    }
+    ...
+}
+\end{minted}
+
+Po wykonaniu dzielenia w zmiennej \mintinline{c}{remaining} pozostaje nam reszta z dzielenia, którą wykorzystamy później zatem kopiujemy ją do jednego z argumentów funkcji.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *mod, bool *ok) {
+    ...
+    if (mod) {
+        strcpy(mod, remaining.data);
+    }
+}
+\end{minted}
+
+\subsubsection{Dzielenie modulo}
+
+Dzielenie modulo wykorzystuje po prostu zaimplementowane wcześniej dzielenie całkowitoliczbowe. Wynik dzielenia modulo będzie zawsze mniejszy lub równy rozmiarowi argumentu, zatem możemy przechować go w tablicy\\\mintinline{c}{mod[ARG_SIZE]}.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_mod(scanner *scanner, short base, char *arg1, char *arg2, bool *ok) {
+    char mod[ARG_SIZE];
+    exec_div(scanner, base, arg1, arg2, mod, ok);
+
+    dynStr result;
+    dynStr_from(&result, mod);
+
+    return result;
+}
+\end{minted}
+
 
 
 

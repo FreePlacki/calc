@@ -119,25 +119,25 @@ int compare(char *arg1, char *arg2) {
     return strcmp(arg1, arg2);
 }
 
-dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
+dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *mod,
                 bool *ok) {
     dynStr result;
     init_dynStr(&result);
     append_char(&result, '0');
 
     if (arg2[0] == '0') {
-        report(scanner, error, "Division by 0!\n");
+        report(scanner, error, "Dzielenie przez 0!\n");
         if (ok)
             *ok = false;
         return result;
     }
 
     dynStr remaining;
-    init_dynStr(&remaining); // have to init if res = 0
+    init_dynStr(&remaining);
 
-    int index = 0;
-    while (arg1[index] != '\0') {
-        append_char(&remaining, arg1[index]);
+    int i = 0;
+    while (arg1[i] != '\0') {
+        append_char(&remaining, arg1[i]);
         trim_leading(&remaining, '0');
 
         int quotient = 0;
@@ -145,19 +145,19 @@ dynStr exec_div(scanner *scanner, short base, char *arg1, char *arg2, char *m,
             remaining = exec_sub(base, remaining.data, arg2);
             quotient++;
         }
-        // reset remaining size
+
+        // resetujemy rozmiar remaining
         if (quotient) {
             dynStr_from(&remaining, remaining.data);
-            trim_leading(&remaining, '0');
         }
 
         char c = int_to_char(quotient);
         append_char(&result, c);
-        index++;
+        i++;
     }
 
-    if (m) {
-        strcpy(m, remaining.data);
+    if (mod) {
+        strcpy(mod, remaining.data);
     }
 
     free_dynStr(&remaining);
@@ -235,7 +235,6 @@ dynStr exec_pow(short base, char *arg1, char *arg2) {
     while (true) {
         if (exp & 1)
             result = exec_mul(base, result.data, arg1);
-        // dynStr_from(&result, exec_mul(16, result.data, arg1).data);
         exp >>= 1;
         if (!exp)
             break;
