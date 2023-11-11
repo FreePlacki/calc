@@ -48,18 +48,19 @@ void free_dynStr(dynStr *str) {
     str->capacity = 0;
 }
 
-bool is_digit(char c, unsigned int base) {
+bool is_digit(char c, unsigned short base) {
     bool ok = true;
     char_to_dec(c, base, &ok);
     return ok;
 }
 
 bool is_unknown_char(scanner *scanner, char c) {
-    bool unknown =  !((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') ||
-             (c == '+' || c == '*' || c == '/' || c == '%' || c == '^'));
+    bool unknown =
+        !((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') ||
+          (c == '+' || c == '*' || c == '/' || c == '%' || c == '^') ||
+          (c == ' '));
 
     if (unknown) {
-        scanner->idx++;
         report(scanner, error, "Nieoczekiwany znak `%c`\n", c);
     }
 

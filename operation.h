@@ -7,7 +7,7 @@ enum op_type {
     Div,
     Mod,
     Pow,
-    Convert,
+    Con,
 };
 
 typedef struct {

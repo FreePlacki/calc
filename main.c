@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     } else {
         in_file = fopen(argv[1], "r");
         if (in_file == NULL) {
-            fprintf(stderr, "Nie można otworzyć pliku `%s`\n", argv[1]);
+            report(NULL, error, "Nie można otworzyć pliku `%s`\n", argv[1]);
             exit(1);
         }
 
@@ -84,12 +84,13 @@ int main(int argc, char **argv) {
     }
 
     dynStr result;
-
     oper op;
     bool ok = true;
     unsigned int line_idx = 0;
     char buffer[LINE_SIZE];
-    char op_buffer[LINE_SIZE]; // do raportowania błędów
+
+    // do raportowania błędów
+    char op_buffer[LINE_SIZE];
     int op_idx = 0;
     int arg_count = 0;
     int expected_args = 2;
@@ -106,39 +107,40 @@ int main(int argc, char **argv) {
             continue;
         }
 
+        for (int i = 0; buffer[i]; i++) {
+            buffer[i] = toupper(buffer[i]);
+        }
+
         scanner scanner;
         scanner.idx = 0;
         scanner.line_idx = line_idx;
         scanner.line = buffer;
 
         if (!ok) {
-            if (!is_argument(&scanner, buffer)) {
-                op_idx = 0;
-                ok = true;
-            } else {
-                continue;
-            }
-        }
-
-        for (int i = 0; buffer[i]; i++) {
-            buffer[i] = toupper(buffer[i]);
-        }
-
-        char arg[ARG_SIZE];
-
-        if (is_argument(&scanner, buffer)) {
-            if (is_unknown_char(&scanner, buffer[0])) {
-                scanner.idx++;
+            ok = true;
+            if (arg_count >= expected_args)
+                dump_result(out_file, &result, arg_count, expected_args,
+                            line_idx, op_buffer, is_repl, ok);
+            // jeżeli nie zaczyna się jeszcze nowe działanie lub przy
+            // parsowaniu wystąpił błąd to nadal pomijamy tą linię
+            if (is_argument(&scanner, buffer, &ok) || !ok) {
                 ok = false;
                 continue;
             }
+        }
+
+        if (is_argument(&scanner, buffer, &ok)) {
+            if (!ok)
+                continue;
 
             if (op_idx == 0) {
                 report(&scanner, error, "Nie podano nazwy operacji\n");
                 ok = false;
                 continue;
             }
-            int base = op.op_type == Convert ? (op.base >> 4) + 2 : op.base;
+
+            int base = op.op_type == Con ? (op.base >> 4) + 2 : op.base;
+            char arg[ARG_SIZE];
             read_arg(&scanner, arg, base, &ok);
             arg_count++;
             if (!ok)
@@ -149,7 +151,7 @@ int main(int argc, char **argv) {
                 if (!ok)
                     continue;
 
-                if (op.op_type == Convert) {
+                if (op.op_type == Con) {
                     if (!is_repl)
                         fprintf(out_file, "%s\n\n", arg);
                     dump_result(out_file, &result, arg_count, expected_args,
@@ -168,7 +170,7 @@ int main(int argc, char **argv) {
             if (!ok)
                 continue;
 
-            expected_args = op.op_type == Convert ? 1 : 2;
+            expected_args = op.op_type == Con ? 1 : 2;
             arg_count = 0;
             strcpy(op_buffer, buffer);
             op_idx = line_idx;
@@ -178,9 +180,8 @@ int main(int argc, char **argv) {
             fprintf(out_file, "%s\n", buffer);
     }
 
-    if (op_idx != 0)
-        dump_result(out_file, &result, arg_count, expected_args, op_idx,
-                    op_buffer, is_repl, ok);
+    dump_result(out_file, &result, arg_count, expected_args, op_idx, op_buffer,
+                is_repl, ok);
 
     fclose(in_file);
     fclose(out_file);

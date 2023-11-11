@@ -257,7 +257,7 @@ dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2, bool *ok) {
         return exec_div(scanner, op.base, arg1, arg2, NULL, ok);
     case Mod:
         return exec_mod(scanner, op.base, arg1, arg2, ok);
-    case Convert:
+    case Con:
         return exec_convert(scanner, op.base, arg2);
     default:
         assert("Unreachable" && 0);

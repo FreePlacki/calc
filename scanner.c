@@ -10,7 +10,7 @@
 #include <string.h>
 
 void parse_int(scanner *scanner, char *output, unsigned int len,
-               unsigned int base, bool *ok) {
+               unsigned short base, bool *ok) {
     char *start = scanner->line + scanner->idx;
     unsigned int i = 0;
 
@@ -22,7 +22,7 @@ void parse_int(scanner *scanner, char *output, unsigned int len,
     while (start[i] != '\0' && start[i] != '\n' && start[i] != '\r' &&
            start[i] != ' ') {
         char c = toupper(start[i++]);
-        scanner->idx++;
+        advance(scanner);
 
         if (is_unknown_char(scanner, c)) {
             if (ok)
@@ -67,16 +67,20 @@ unsigned short parse_base(scanner *scanner, bool *ok) {
     return res;
 }
 
-bool is_argument(scanner *scanner, char *line) {
-    // traktujemy nieznane znaki jako argument aby potem
-    // w parsowaniu wyrzucić błąd
-    if (is_unknown_char(scanner, line[0]))
-        return true;
-
+bool is_argument(scanner *scanner, char *line, bool *ok) {
     int i = 0;
     while (line[i] != '\n' && line[i] != '\r' && line[i] != '\0') {
+        // traktujemy nieznane znaki jako argument.
+        // za obsługę błędów będzie odpowiedzialny urzystkownik funkcji
+        if (is_unknown_char(scanner, line[i])) {
+            if (ok)
+                *ok = false;
+            return true;
+        }
+
         if (!is_digit(line[i], 16))
             return false;
+
         i++;
     }
 
@@ -99,7 +103,7 @@ void consume_spaces(scanner *scanner) {
     }
 }
 
-void read_arg(scanner *scanner, char *output, unsigned int base, bool *ok) {
+void read_arg(scanner *scanner, char *output, unsigned short base, bool *ok) {
     parse_int(scanner, output, ARG_SIZE - 1, base, ok);
 }
 
@@ -123,7 +127,7 @@ oper read_instruction(scanner *scanner, bool *ok) {
             return op;
 
         op.base = ((base1 - 2) << 4) | (base2 - 2);
-        op.op_type = Convert;
+        op.op_type = Con;
         return op;
     }
 

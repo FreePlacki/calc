@@ -21,16 +21,11 @@
 
 \begin{document}
 \maketitle
+\tableofcontents
+\pagebreak
 
 \section{Założenia projektu}
 
-% \begin{minted}[mathescape,
-%                linenos,
-%                numbersep=5pt]{c}
-% int main() {
-%     printf("Hello World!");
-% }
-% \end{minted}
 
 Celem projektu jest zaimplementowanie kalkulatora wykonującego działania na dowolnie dużych liczbach, w systemach liczbowych od 2 do 16.
 
@@ -68,16 +63,13 @@ Dodatkowo program można uruchomić bez argumentów aby wejść w tryb interakty
 
 W przypadku podania więcej niż 2 argumentów program wypisuje instrukcję używania.
 
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
    $ calc.exe a b c
    Użycie:
-	calc.exe <ścieżka do pliku wejściowego>
-    [ścieżka do pliku wyjściowego]
+	calc.exe <ścieżka do pliku wejściowego> [ścieżka do pliku wyjściowego]
 
     Plik wejściowy musi być w formacie `*.txt`
-    Plik wyjściowy jest opcjonalny
-    (zostanie stworzony na podstawie nazwy pliku
-    wejściowego `out_*.txt`) 
+    Plik wyjściowy jest opcjonalny (zostanie stworzony na podstawie nazwy pliku wejściowego `out_*.txt`) 
 \end{minted}
 
 \subsection{Obsługiwanie błędów}
@@ -96,9 +88,8 @@ Przykłady:
 \end{minted}
 
 Jeżeli podamy za mało argumentów:
-\begin{minted}{bash}
-    WARNING [7:1]: Operacja przyjmuje przynajmniej 2 argumenty,
-    otrzymano 1
+\begin{minted}[breaklines]{bash}
+    WARNING [7:1]: Operacja przyjmuje przynajmniej 2 argumenty, otrzymano 1
 	+ 10
 	^
 \end{minted}
@@ -127,18 +118,374 @@ Obsługiwane błędy:
 
 Program został napisany w języku C, kompilowany w \textit{gcc}.
 \begin{minted}{bash}
-    $ gcc -pedantic -Wall -Wextra -g
+    $ gcc -O2 -pedantic -Wall -Wextra
 \end{minted}
 
-Używany edytor tekstu to \textit{neovim} (na linuxie) oraz \textit{visual studio code} (na windowsie).
+Używany edytor tekstu to \textit{neovim} (na linuxie) oraz \textit{visual studio code} (na windowsie), \textit{clang-format} do formatowania kodu (z ustawionymi 4 spacajmi indentacji zamiast 2). Poza tym również \textit{git} jako system kontroli wersji oraz proste skrypty w \textit{bash}-u do testowania.
+
+Dokumentacja została napisana w \textit{latex}-u z wykorzystaniem biblioteki \textit{minted} do wyświetlania kodu.
 
 
 \section{Ogólny opis rozwiązania}
 
+Kod jest podzielony na 5 modułów.
+
+\pagebreak
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// scanner.h
+
+#define ARG_SIZE 41
+#define LINE_SIZE 256
+
+typedef struct {
+    char *line;
+    unsigned int line_idx;
+    unsigned int idx;
+} scanner;
+
+void parse_int(scanner *scanner, char *output, unsigned int len,
+               unsigned short base, bool *ok);
+oper read_instruction(scanner *scanner, bool *ok);
+void read_arg(scanner *scanner, char *output, unsigned short base, bool *ok);
+bool is_argument(scanner *scanner, char *line);
+
+char advance(scanner *scanner);
+void consume(scanner *scanner, char c);
+void consume_spaces(scanner *scanner);
+\end{minted}
+
+Scanner będzie przechodził po danej linii znak po znaku i próbował ją zinterpretować jako argument lub nazwę operacji. Będzie również wykrywał błędne formatowanie liczb (np. użycie znaku 'd' w liczbie o podstawie 11).
+
+Sam scanner jest structem zawierającym daną linię pliku wejściowego oraz jej numer i swoją pozycję (wskazującą na następny znak do przeczytania).
+
+Dwie najważniejsze funkcje to \mintinline{c}{read_arg}, która zczytuje argument i zapisuje go w podanym argumencie \mintinline{c}{char *output} oraz \mintinline{c}{read_instruction}, która zwraca struct \mintinline{c}{oper} reprezentujący typ operacji oraz jej bazę.
+
+\pagebreak
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// operation.h
+
+enum op_type {
+    Add,
+    Mul,
+    Div,
+    Mod,
+    Pow,
+    Con,
+};
+
+typedef struct {
+    enum op_type op_type;
+    unsigned short base;
+} oper;
+\end{minted}
+
+Po odczytaniu operacji i argumentów działania przekazywane są do wykonania:
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.h
+
+dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2, bool *ok);
+\end{minted}
+
+Funkcja ta, patrząc na typ operacji rozdziela wykonanie do poszczególnych funkcji działań.
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr execute(scanner *scanner, oper op, char *arg1, char *arg2, bool *ok) {
+    switch (op.op_type) {
+    case Add:
+        return exec_add(op.base, arg1, arg2);
+    case Mul:
+        return exec_mul(op.base, arg1, arg2);
+    case Pow:
+        return exec_pow(op.base, arg1, arg2);
+    case Div:
+        return exec_div(scanner, op.base, arg1, arg2, NULL, ok);
+    case Mod:
+        return exec_mod(scanner, op.base, arg1, arg2, ok);
+    case Con:
+        return exec_convert(scanner, op.base, arg2);
+    default:
+        assert("Unreachable" && 0);
+    }
+}
+\end{minted}
+
+Funkcje te zwracają typ \mintinline{c}{dynStr}, czyli dynamicznie alokowaną tablicę znaków, zdefiniowaną w \mintinline{c}{helpers.h} razem z innymi przydatnymi operacjami.
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// helpers.h
+#define dbg(x, y) fprintf(stderr, "%d:" #y " = " x "\n", __LINE__, y);
+
+typedef struct {
+    char *data;
+    size_t size;
+    size_t capacity;
+} dynStr;
+
+void init_dynStr(dynStr *str);
+void dynStr_from(dynStr *str, char *s);
+void append_char(dynStr *str, char c);
+void free_dynStr(dynStr *str);
+
+void print_help(char *name);
+void reverse(char *str);
+bool is_digit(char c, unsigned short base);
+bool is_unknown_char(scanner *scanner, char c);
+int char_to_dec(char c, short base, bool *ok);
+char int_to_char(int v);
+void trim_trailing(dynStr *num, char c);
+void trim_leading(dynStr *num, char c);
+const char *extract_name(const char *path);
+\end{minted}
+
+Operacje które mogą napotkać błędne wejście posługują się funkcją \mintinline{c}{report}, która ma wypisać informację o błędzie i jego lokalizacji.
 
 
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// report.h
+
+typedef enum {
+    error,
+    warning,
+    info,
+} er_type;
+
+void report(scanner *scanner, er_type t, char *msg, ...);
+\end{minted}
+
+Program ma początek oczywiście w \mintinline{c}{main.c} gdzie zczytujemy od użytkownika nazwy plików i w pętli czytamy kolejne linie wejścia i wypisujemy rezulataty.
+
+Zatem podsumowując, ogólna struktura kodu:\\
+\mintinline{c}{main}: pobiera input, przechodzi przez każdą linię $\rightarrow$ \mintinline{c}{scanner}: przechodzi przez każdy znak linii $\rightarrow$ \mintinline{c}{execute}: wykonuje działania $\rightarrow$ \mintinline{c}{main}: wypisuje output.
 
 \section{Szczegóły}
+
+\subsection{Parsowanie argumentów programu}
+Tak jak było powiedziane w pierwszej części, porgram może przyjąć 0, 1 lub 2 argumenty, zatem dla większej ilości chcemy wypisać tekst pomocniczy.
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+if (argc > 3) {
+    print_help(argv[0]);
+    exit(1);
+}
+\end{minted}
+
+Warto zaznaczyć, że \mintinline{c}{argv[0]} to zawsze nazwa programu, stąd sprawdzamy \mintinline{c}{argc > 3}.
+
+Jeżeli nie podano żadnego argumentu plik wejściowy i wyjściowy to odpowiednio standardowe wejście i wyjście.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+FILE *in_file;
+FILE *out_file;
+bool is_repl = false;
+if (argc == 1) {
+    in_file = stdin;
+    out_file = stdout;
+    is_repl = true;
+} else {
+    ...
+}
+\end{minted}
+
+W przeciwnym razie otwieramy plik wejściowy i tworzymy/otwieramy wyjściowy.
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+else {
+    in_file = fopen(argv[1], "r");
+    if (in_file == NULL) {
+        report(NULL, error, "Nie można otworzyć pliku `%s`\n", argv[1]);
+        exit(1);
+    }
+
+    char *out_name;
+    if (argc == 3) {
+        out_name = argv[2];
+    } else {
+        char o_name[100] = "out_";
+        out_name = strcat(o_name, extract_name(argv[1]));
+        out_name = strcat(out_name, ".txt");
+        report(NULL, info, "Nie podano pliku wyjściowego, stworzono `%s`\n",
+               out_name);
+    }
+    out_file = fopen(out_name, "w");
+}
+\end{minted}
+
+Jeżeli nie podano pliku wyjściowego musimy z nazwy wejściowego utworzyć nazwę wyjściowego:
+
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// helpers.c
+
+const char *extract_name(const char *path) {
+    const char *filename;
+
+    char slash = '/';
+#ifdef _WIN32
+    slash = '\\';
+#endif
+    const char *last_slash = strrchr(path, slash);
+
+    if (last_slash != NULL) {
+        filename = last_slash + 1;
+    } else {
+        filename = path;
+    }
+
+    const char *last_dot = strrchr(filename, '.');
+
+    if (last_dot != NULL) {
+        size_t len = last_dot - filename;
+        char *new_str = (char *)malloc(sizeof(char) * (len + 1));
+        strncpy(new_str, filename, len);
+        new_str[len] = '\0';
+        return strdup(new_str);
+    } else {
+        return strdup(filename);
+    }
+}
+\end{minted}
+
+Najpierw odcinamy od ostatniego '/' (na windowsie `\textbackslash`) potem do ostatniej '.' aby dostać nazwę pliku.
+
+
+\subsection{Czytanie wejścia}
+
+Przed pętlą deklarujemy pewne zmienne przechowujące stan programu:
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+dynStr result;
+oper op;
+bool ok = true;
+unsigned int line_idx = 0;
+char buffer[LINE_SIZE];
+
+// do raportowania błędów
+char op_buffer[LINE_SIZE];
+int op_idx = 0;
+int arg_count = 0;
+int expected_args = 2;
+\end{minted}
+
+4 ostatnie nie są niezbędne do funkcjonowania programu, lecz dają cenne informacje do bardziej precyzyjnego raportowania błędów. Będzie to często powtarzający się scenariusz - dla lepszych błędów musimy poświęcić nieco prostoty kodu (np. funkcje będą musały przyjmować 1-2 argumenty więcej aby dostać informacje do raportowania błędów). Mimo to uważam, że dobre błędy są warte lekkiego pogorszenia prostoty implementacji (np. pomocne wiadomości o błędzie / warningi są dla mnie największą zaletą danego kompilatora).\\
+
+Przed pętlą wypisujemy jeszcze wiadomość dla trybu interaktywnego.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+if (is_repl)
+    printf("%s repl\nAby zakończyć: ctrl-d (ctrl-z na windowsie)\n\n",
+           argv[0]);
+
+while (repl_prompt(line_idx, is_repl),
+       fgets(buffer, sizeof(buffer), in_file) != NULL) {
+    ...
+}
+\end{minted}
+
+Pętla wykonuje się dopóki \mintinline{c}{fgets} nie zwróci \mintinline{c}{NULL} (w przypadku błędu lub końca pliku). Przed każdą iteracją wypisujemy również prostego prompta jeżeli jesteśmy w repl:
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+void repl_prompt(int line_idx, bool is_repl) {
+    if (is_repl)
+        printf("[%d]> ", line_idx + 1);
+}
+\end{minted}
+
+Będziemy omijać wszystkie puste linie oraz zaczynające się na \mintinline{c}{'#'} (implementując w ten sposób możliwość komentarzy, przydatnych w debugowaniu).
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+if (buffer[0] == '\n' || buffer[0] == '#') {
+    continue;
+}
+        
+for (int i = 0; buffer[i]; i++) {
+    buffer[i] = toupper(buffer[i]);
+}
+\end{minted}
+
+Przy okacji zamieniamy wszystkie znaki na wielkie litery (aby nie odróżniać potem \mintinline{c}{'A'} od \mintinline{c}{'a'} w liczbach).
+
+Następnie inicjujemy scanner.
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// main.c
+
+scanner scanner;
+scanner.idx = 0;
+scanner.line_idx = line_idx;
+scanner.line = buffer;
+\end{minted}
+
+Następnie będziemy potrzebowali dowiedzieć się czy linia którą właśnie zczytaliśmy jest argumentem (pojedynczą liczbą) czy nazwą operacji (czymś formatu [znak] [liczba] lub [liczba] [liczba]).
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// scanner.c
+
+bool is_argument(scanner *scanner, char *line) {
+    // traktujemy nieznane znaki jako argument.
+    // za obsługę błędów będzie odpowiedzialny użytkownik funkcji
+
+    if (is_unknown_char(scanner, line[0]))
+        return true;
+
+    int i = 0;
+    while (line[i] != '\n' && line[i] != '\r' && line[i] != '\0') {
+        if (!is_digit(line[i], 16))
+            return false;
+        i++;
+    }
+
+    return true;
+}
+\end{minted}
+
+
+
+
+
 \section{Podsumowanie}
 
 \end{document}

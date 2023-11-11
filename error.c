@@ -30,5 +30,5 @@ void report(scanner *scanner, er_type t, char *msg, ...) {
     fprintf(stderr, " [%d:%d]: ", scanner->line_idx, scanner->idx);
     vfprintf(stderr, msg, args);
     fprintf(stderr, "\t%s", scanner->line);
-    fprintf(stderr, "\t%*s^\n", scanner->idx-1, "");
+    fprintf(stderr, "\t%*s^\n", scanner->idx > 0 ? scanner->idx-1 : scanner->idx, "");
 }
