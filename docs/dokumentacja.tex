@@ -1158,4 +1158,11 @@ Jeżeli nasz wykładnik jest nieparzysty (ostatni bit równy 1) to mnożymy rezu
 
 \section{Podsumowanie}
 
+Największą trudność w implementacji nie sprawiły same algorytmy wykonujące działania lecz poprawne parsowanie pliku wejściowego oraz wykrywanie błędów użytkownika.
+
+Można byłoby uzyskać nieco prostszy kod jeżeli nie pomijałbym w pliku wejściowym nowych linii, czyli po każdym działaniu oczekiwać trzech \mintinline{c}{'\n'} i być pewnym, że czytamy nagłówek działania. Jednak uważam, że nie zwracanie uwagi na nowe linie daje użytkownikowi większą swobodę w formatowaniu swojego wejścia oraz pozwala na prostszą implementacje trybu interaktywnego.
+
+Lekkim utrudnieniem był również fakt, że operacja zamiany bazy posiada w nagłówku dwie liczby zamiast znak i liczbę. Z faktu, że była to jedyna taka operacja uznałem, że dopasuję ją do istniejącej struktury działania (typ działania i baza) i zapiszę w bazie 2 liczby zamiast tworzyć osobną abstrakcję specjalnie dla jednego typu działania.
+
+
 \end{document}
