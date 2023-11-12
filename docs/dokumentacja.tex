@@ -1054,9 +1054,106 @@ dynStr exec_mod(scanner *scanner, short base, char *arg1, char *arg2, bool *ok) 
 }
 \end{minted}
 
+\subsubsection{Zamiana systemu}
+
+Aby dokonać zamiany systemu liczbowego będziemy naszą liczbę zamieniać najpierw na system dziesiętny. Wynika to z tego, że przy konwersji na system dziesiętny możemy korzystać z naszej funkcji \mintinline{c}{char_to_dec}, która korzysta z odejmowania znaków aby zamienić znak na jego wartość w systemie dziesiętnym.
+
+Zatem najpierw funkcja która z dowolnego systemu zamienia na dziesiętny:
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr to_dec(short from, char *arg) {
+    ...
+    for (int i = 0; i < len; i++) {
+        int val = char_to_dec(arg[i], 16, NULL);
+        char val_s[8];
+        sprintf(val_s, "%d", val);
+
+        // schemat Hornera
+        result = exec_add(10, result.data, val_s);
+        if (i != len - 1)
+            result = exec_mul(10, result.data, from_s);
+    }
+
+    return result;
+}
+\end{minted}
+
+Aby zamienić liczbę złożoną z cyfr: $a_{n-1}a_{n-2}\ldots a_0$ na liczbę o podstawie $b$ musimy każdą z nich zamienić na wartość w systemie dziesiętnym, pomnożyć przez odpowiednią potęgę $b$ i je dodać. Niech $x_k$ będzie wartością w systemie dziesiętnym cyfry $a_k$ mamy wtedy:
+$$x_0b^0 + x_1b^1 + \ldots + x_{n-1}b^{n-1}$$
+Łatwo sprawdzić, że musimy wykonać $\frac{n(n-1)}{2}$ (czyli $O(n^2)$) mnożeń.
+
+Korzystając ze schematu Hornera możemy naszą liczbę zapisać jako:
+
+$$x_0 + b(x_1 + b(x_2 + \ldots + bx_{n-1})\ldots)$$
+
+Gdzie potrzeba jedynie $n$ mnożeń, co znacząco przyspiesza algorytm.
+
+Wracając do naszej funkcji. Każdy znak zamieniamy najpierw na wartość dziesiętną i następnie dodajemy ją do wyniku i mnożymy przez $b$ (oprócz wyrazu $x_0$).\\
+
+Sama konwersja jest prostym dzieleniem. Wynik to reszty z dzielenia (w podstawie 10) naszego argumentu przez podstawę na którą chcemy zamienić.
+
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_convert(scanner *scanner, short base, char *arg) {
+    short from = (base >> 4) + 2;
+    short to = (base & 0xF) + 2;
+
+    dynStr remaining = to_dec(from, arg);
+    dynStr result;
+    init_dynStr(&result);
+
+    while (true) {
+        char mod[4];
+        char to_str[4];
+        sprintf(to_str, "%d", to);
+
+        remaining = exec_div(scanner, 10, remaining.data, to_str, mod, NULL);
+        append_char(&result, int_to_char(atoi(mod)));
+        if (remaining.data[0] == '0')
+            break;
+    }
+
+    free_dynStr(&remaining);
+    reverse(result.data);
+    return result;
+}
+\end{minted}
+
+Pamiętamy, że argument \mintinline{c}{base} zawiera jednocześnie bazę z której konwertujemy i bazę na którą konwertujemy, zatem musimy dokonać najpierw stosowne shifty. Na końcu trzeba również pamiętać, że wynik czytamy od końca.
 
 
+\subsubsection{Potęgowanie}
+Najprostszy algorytm potęgowania $x^n$ to mnożenie $x$ przez siebie $n$ razy. Łatwo jednak zauważyć na przykładzie, że możemy tą liczbę zredukować do $\lceil \log{n}\rceil$. Weźmy $x^8$. Zamiast mnożyć $x$ 8 razy możemy zapisać $x^8 = ((x^2)^2)^2$ (czyli tylko 3 mnożenia).
 
+Ogólnie $x^n = (x^2)^{n/2}$ dla parzystych $n$ oraz $x^n = x(x^2)^{(n-1)/2}$ dla nieparzystych.
+\begin{minted}[mathescape,
+               linenos,
+               numbersep=5pt, breaklines]{c}
+// execute.c
+
+dynStr exec_pow(short base, char *arg1, char *arg2) {
+    ...
+    // https://en.wikipedia.org/wiki/Exponentiation_by_squaring
+    while (true) {
+        if (exp & 1)
+            result = exec_mul(base, result.data, arg1);
+        exp >>= 1;
+        if (!exp)
+            break;
+        arg1 = exec_mul(base, arg1, arg1).data;
+    }
+
+    return result;
+}
+\end{minted}
+
+Jeżeli nasz wykładnik jest nieparzysty (ostatni bit równy 1) to mnożymy rezultat razy $x$. Następnie shiftujemy wykładnik w prawo. Zauważmy, że jest to zarówno dzielenie przez 2 (dla parzystych wykładników) oraz $(n-1)/2$ dla nieparzystych. Na koniec podnosimy $x$ do kwadratu i powtarzamy dopóki wykładnik będzie niezerowy.
 
 
 \section{Podsumowanie}

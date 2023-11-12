@@ -122,12 +122,12 @@ void trim_leading(dynStr *num, char c) {
         i++;
     }
 
-    // If the entire string is '0', keep one zero
+    // jeżeli mamy same 0 to chcemy zachować jedno
     if (i == num->size) {
         num->data[1] = '\0';
         num->size = 1;
     } else {
-        // Shift the non-zero part to the beginning of the string
+        // Shiftujemy część niezerową na początek
         memmove(num->data, num->data + i, num->size - i + 1);
         num->size -= i;
     }

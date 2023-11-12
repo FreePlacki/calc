@@ -17,7 +17,7 @@ dynStr exec_add(short base, char *arg1, char *arg2) {
     int carry = 0;
     int i, j;
     for (i = n1 - 1, j = n2 - 1; i >= 0 || j >= 0; i--, j--) {
-        // Możemy (chyba) dać NULL za ok, bo już sprawdziliśmy błędny input
+        // Możemy dać NULL za ok, bo już sprawdziliśmy błędny input
         int digit1 = (i >= 0) ? char_to_dec(arg1[i], base, NULL) : 0;
         int digit2 = (j >= 0) ? char_to_dec(arg2[j], base, NULL) : 0;
         int sum = digit1 + digit2 + carry;
@@ -185,11 +185,13 @@ dynStr to_dec(short from, char *arg) {
     char from_s[8];
     sprintf(from_s, "%d", from);
     int len = strlen(arg);
+
     for (int i = 0; i < len; i++) {
         int val = char_to_dec(arg[i], 16, NULL);
         char val_s[8];
         sprintf(val_s, "%d", val);
 
+        // schemat Hornera
         result = exec_add(10, result.data, val_s);
         if (i != len - 1)
             result = exec_mul(10, result.data, from_s);
@@ -202,7 +204,7 @@ dynStr exec_convert(scanner *scanner, short base, char *arg) {
     short from = (base >> 4) + 2;
     short to = (base & 0xF) + 2;
 
-    dynStr div = to_dec(from, arg);
+    dynStr remaining = to_dec(from, arg);
     dynStr result;
     init_dynStr(&result);
 
@@ -210,13 +212,14 @@ dynStr exec_convert(scanner *scanner, short base, char *arg) {
         char mod[4];
         char to_str[4];
         sprintf(to_str, "%d", to);
-        div = exec_div(scanner, 10, div.data, to_str, mod, NULL);
+
+        remaining = exec_div(scanner, 10, remaining.data, to_str, mod, NULL);
         append_char(&result, int_to_char(atoi(mod)));
-        if (div.data[0] == '0')
+        if (remaining.data[0] == '0')
             break;
     }
 
-    free_dynStr(&div);
+    free_dynStr(&remaining);
     reverse(result.data);
     return result;
 }
@@ -231,7 +234,7 @@ dynStr exec_pow(short base, char *arg1, char *arg2) {
         return result;
     }
 
-    // https://stackoverflow.com/questions/101439/the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
+    // https://en.wikipedia.org/wiki/Exponentiation_by_squaring
     while (true) {
         if (exp & 1)
             result = exec_mul(base, result.data, arg1);
